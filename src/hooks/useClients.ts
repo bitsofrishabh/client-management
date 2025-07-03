@@ -44,6 +44,7 @@ export const useClients = () => {
       startWeight: client.start_weight,
       currentWeight: client.current_weight,
       goalWeight: client.goal_weight,
+      height: client.height,
       status: client.status,
       notes: client.notes,
       healthIssues: client.health_issues,
@@ -84,6 +85,7 @@ export const useCreateClients = () => {
         start_weight: client.startWeight,
         current_weight: client.currentWeight,
         goal_weight: client.goalWeight,
+        height: client.height,
         status: client.status,
         notes: client.notes,
         health_issues: client.healthIssues || [],
@@ -175,6 +177,7 @@ export const useUpdateClient = () => {
       if (updates.startWeight !== undefined) clientUpdates.start_weight = updates.startWeight;
       if (updates.currentWeight !== undefined) clientUpdates.current_weight = updates.currentWeight;
       if (updates.goalWeight !== undefined) clientUpdates.goal_weight = updates.goalWeight;
+      if (updates.height !== undefined) clientUpdates.height = updates.height;
       if (updates.status !== undefined) clientUpdates.status = updates.status;
       if (updates.notes !== undefined) clientUpdates.notes = updates.notes;
       if (updates.healthIssues !== undefined) clientUpdates.health_issues = updates.healthIssues;

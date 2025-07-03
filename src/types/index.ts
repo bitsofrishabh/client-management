@@ -17,9 +17,10 @@ export interface Client {
   name: string;
   email: string;
   startDate: string;
-  startWeight: number;
-  currentWeight?: number;
-  goalWeight?: number;
+  startWeight: number; // in kg
+  currentWeight?: number; // in kg
+  goalWeight?: number; // in kg
+  height?: number; // in cm
   status: 'active' | 'inactive' | 'yet-to-start' | 'completed';
   notes: string;
   healthIssues?: string[];
@@ -32,7 +33,7 @@ export interface Client {
 
 export interface WeightEntry {
   date: string;
-  weight: number;
+  weight: number; // in kg
 }
 
 export interface Workout {

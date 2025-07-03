@@ -1,10 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Search, Filter, Users, TrendingUp, Calendar, MoreVertical, Edit, Trash2, FileText, Upload, Table, Grid, CalendarDays, Eye } from 'lucide-react';
+import { Plus, Search, Filter, Users, TrendingUp, Calendar, Edit, Trash2, FileText, Upload, Eye } from 'lucide-react';
 import { Client } from '../../types';
 import { toast } from 'sonner';
 import CSVImport from '../../components/CSVImport';
 import ClientModal from '../../components/ClientModal';
+import ClientEditModal from '../../components/ClientEditModal';
 import { useClients, useCreateClients, useDeleteClient } from '../../hooks/useClients';
 
 const ClientManagement: React.FC = () => {
@@ -14,7 +15,6 @@ const ClientManagement: React.FC = () => {
   const [showCSVImport, setShowCSVImport] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-  const [viewMode, setViewMode] = useState<'table' | 'grid' | 'calendar'>('table');
 
   // Use React Query hooks for data management
   const { data: clients = [], isLoading, error } = useClients();
@@ -92,7 +92,7 @@ const ClientManagement: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -168,37 +168,6 @@ const ClientManagement: React.FC = () => {
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               />
             </div>
-            
-            {/* View Toggle */}
-            <div className="flex bg-gray-100 rounded-lg p-1">
-              <button
-                onClick={() => setViewMode('table')}
-                className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  viewMode === 'table' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                <Table className="h-4 w-4" />
-                <span>Table</span>
-              </button>
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  viewMode === 'grid' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                <Grid className="h-4 w-4" />
-                <span>Grid</span>
-              </button>
-              <button
-                onClick={() => setViewMode('calendar')}
-                className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  viewMode === 'calendar' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                <CalendarDays className="h-4 w-4" />
-                <span>Calendar</span>
-              </button>
-            </div>
 
             <div className="relative">
               <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -217,162 +186,108 @@ const ClientManagement: React.FC = () => {
           </div>
         </motion.div>
 
-        {/* Clients Table */}
-        {viewMode === 'table' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.5 }}
-            className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden"
-          >
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Weight Progress</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Health Issues</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Comments/Notes</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredClients.map((client) => (
-                    <tr key={client.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div 
-                          className="cursor-pointer hover:text-blue-600 transition-colors"
-                          onClick={() => handleClientClick(client)}
-                        >
-                          <div className="text-sm font-medium text-gray-900">{client.name}</div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        <div>
-                          <span className="font-medium">{client.startWeight} lbs</span>
-                          {client.currentWeight && (
-                            <>
-                              <span className="text-gray-500"> → </span>
-                              <span className="font-medium">{client.currentWeight} lbs</span>
-                            </>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(client.status)}`}>
-                          {client.status.replace('-', ' ')}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex flex-wrap gap-1">
-                          {client.healthIssues?.slice(0, 2).map((issue, idx) => (
-                            <span
-                              key={idx}
-                              className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                                issue.toLowerCase() === 'none' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                              }`}
-                            >
-                              {issue}
-                            </span>
-                          ))}
-                          {(client.healthIssues?.length || 0) > 2 && (
-                            <span className="text-xs text-gray-500">+{(client.healthIssues?.length || 0) - 2}</span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 max-w-xs truncate">
-                        {client.notes || 'No notes'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex items-center space-x-2">
-                          <button
-                            onClick={() => handleClientClick(client)}
-                            className="text-blue-600 hover:text-blue-900 transition-colors"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={() => setEditingClient(client)}
-                            className="text-blue-600 hover:text-blue-900 transition-colors"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteClient(client.id)}
-                            className="text-red-600 hover:text-red-900 transition-colors"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </motion.div>
-        )}
-
-        {/* Grid View */}
-        {viewMode === 'grid' && (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredClients.map((client, index) => (
-              <motion.div
-                key={client.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-shadow cursor-pointer"
-                onClick={() => handleClientClick(client)}
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">{client.name}</h3>
-                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(client.status)}`}>
-                    {client.status.replace('-', ' ')}
-                  </span>
-                </div>
-                
-                <div className="space-y-2 text-sm text-gray-600">
-                  <div>
-                    <span className="font-medium">Weight:</span> {client.startWeight} → {client.currentWeight} lbs
-                  </div>
-                  <div>
-                    <span className="font-medium">Progress:</span> {calculateProgress(client)}%
-                  </div>
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {client.healthIssues?.slice(0, 2).map((issue, idx) => (
-                      <span
-                        key={idx}
-                        className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                          issue.toLowerCase() === 'none' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                        }`}
+        {/* Clients Table - Full Width */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.5 }}
+          className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden"
+        >
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-full">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Weight Progress (kg)</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Height (cm)</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Health Issues</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Comments/Notes</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredClients.map((client) => (
+                  <tr key={client.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div 
+                        className="cursor-pointer hover:text-blue-600 transition-colors"
+                        onClick={() => handleClientClick(client)}
                       >
-                        {issue}
+                        <div className="text-sm font-medium text-gray-900">{client.name}</div>
+                        <div className="text-sm text-gray-500">{client.email}</div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <div>
+                        <span className="font-medium">{client.startWeight} kg</span>
+                        {client.currentWeight && (
+                          <>
+                            <span className="text-gray-500"> → </span>
+                            <span className="font-medium">{client.currentWeight} kg</span>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {client.height ? `${client.height} cm` : 'Not specified'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(client.status)}`}>
+                        {client.status.replace('-', ' ')}
                       </span>
-                    ))}
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex flex-wrap gap-1">
+                        {client.healthIssues?.slice(0, 2).map((issue, idx) => (
+                          <span
+                            key={idx}
+                            className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                              issue.toLowerCase() === 'none' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                            }`}
+                          >
+                            {issue}
+                          </span>
+                        ))}
+                        {(client.healthIssues?.length || 0) > 2 && (
+                          <span className="text-xs text-gray-500">+{(client.healthIssues?.length || 0) - 2}</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-600 max-w-xs">
+                      <div className="truncate">{client.notes || 'No notes'}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => handleClientClick(client)}
+                          className="text-blue-600 hover:text-blue-900 transition-colors"
+                          title="View Details"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => setEditingClient(client)}
+                          className="text-blue-600 hover:text-blue-900 transition-colors"
+                          title="Edit Client"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteClient(client.id)}
+                          className="text-red-600 hover:text-red-900 transition-colors"
+                          title="Delete Client"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        )}
-
-        {/* Calendar View */}
-        {viewMode === 'calendar' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.5 }}
-            className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6"
-          >
-            <div className="text-center py-12">
-              <CalendarDays className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Calendar View</h3>
-              <p className="text-gray-600">Calendar view coming soon...</p>
-            </div>
-          </motion.div>
-        )}
+        </motion.div>
 
         {/* No Results */}
         {filteredClients.length === 0 && (
@@ -406,6 +321,20 @@ const ClientManagement: React.FC = () => {
           <ClientModal
             client={selectedClient}
             onClose={() => setSelectedClient(null)}
+          />
+        )}
+
+        {editingClient && (
+          <ClientEditModal
+            client={editingClient}
+            onClose={() => setEditingClient(null)}
+          />
+        )}
+
+        {showAddForm && (
+          <ClientEditModal
+            client={null}
+            onClose={() => setShowAddForm(false)}
           />
         )}
       </AnimatePresence>

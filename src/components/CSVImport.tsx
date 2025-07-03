@@ -15,6 +15,11 @@ const CSVImport: React.FC<CSVImportProps> = ({ onImport, onClose }) => {
   const [previewData, setPreviewData] = useState<Client[]>([]);
   const [showPreview, setShowPreview] = useState(false);
 
+  // Convert lbs to kg
+  const lbsToKg = (lbs: number): number => {
+    return Math.round((lbs * 0.453592) * 10) / 10;
+  };
+
   const parseCSVData = (csvText: string): Client[] => {
     const lines = csvText.trim().split('\n');
     const headers = lines[0].split(',');
@@ -38,7 +43,7 @@ const CSVImport: React.FC<CSVImportProps> = ({ onImport, onClose }) => {
       if (startDateAndWeight.includes('(')) {
         const weightMatch = startDateAndWeight.match(/^([\d.]+)\((\d{2}-\d{2})\)$/);
         if (weightMatch) {
-          startWeight = parseFloat(weightMatch[1]);
+          startWeight = lbsToKg(parseFloat(weightMatch[1])); // Convert to kg
           const datePart = weightMatch[2];
           startDate = `2025-${datePart.split('-')[1]}-${datePart.split('-')[0]}`;
         }
@@ -46,7 +51,7 @@ const CSVImport: React.FC<CSVImportProps> = ({ onImport, onClose }) => {
         startDate = startDateAndWeight;
         // Look for weight in the next column
         if (row[5] && !isNaN(parseFloat(row[5]))) {
-          startWeight = parseFloat(row[5]);
+          startWeight = lbsToKg(parseFloat(row[5])); // Convert to kg
         }
       }
       
@@ -67,7 +72,7 @@ const CSVImport: React.FC<CSVImportProps> = ({ onImport, onClose }) => {
         if (columnIndex < row.length) {
           const weightValue = row[columnIndex].trim();
           if (weightValue && weightValue !== '-' && weightValue !== '--' && !isNaN(parseFloat(weightValue))) {
-            const weight = parseFloat(weightValue);
+            const weight = lbsToKg(parseFloat(weightValue)); // Convert to kg
             const date = `2025-06-${day.toString().padStart(2, '0')}`;
             weightEntries.push({
               date,
@@ -124,7 +129,8 @@ const CSVImport: React.FC<CSVImportProps> = ({ onImport, onClose }) => {
         startDate: startDate || '2025-06-01',
         startWeight,
         currentWeight,
-        goalWeight: startWeight > 0 ? Math.max(startWeight - 10, startWeight * 0.9) : 0, // Estimate goal weight
+        goalWeight: startWeight > 0 ? Math.max(startWeight - 10, startWeight * 0.9) : 0, // Estimate goal weight in kg
+        height: 170, // Default height in cm
         status,
         notes: notes || '',
         healthIssues,
@@ -174,7 +180,7 @@ const CSVImport: React.FC<CSVImportProps> = ({ onImport, onClose }) => {
       const parsedClients = parseCSVData(csvData);
       setPreviewData(parsedClients);
       setShowPreview(true);
-      toast.success(`Successfully parsed ${parsedClients.length} clients`);
+      toast.success(`Successfully parsed ${parsedClients.length} clients (weights converted to kg)`);
     } catch (error) {
       toast.error('Error parsing CSV data. Please check the format.');
       console.error('CSV parsing error:', error);
@@ -185,7 +191,7 @@ const CSVImport: React.FC<CSVImportProps> = ({ onImport, onClose }) => {
 
   const confirmImport = () => {
     onImport(previewData);
-    toast.success(`Successfully imported ${previewData.length} clients for June 2025`);
+    toast.success(`Successfully imported ${previewData.length} clients for June 2025 (metric system)`);
     onClose();
   };
 
@@ -209,8 +215,8 @@ const CSVImport: React.FC<CSVImportProps> = ({ onImport, onClose }) => {
                 <Upload className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">Import Client Data - June 2025</h2>
-                <p className="text-gray-600">Upload your CSV file or paste the data below</p>
+                <h2 className="text-2xl font-bold text-gray-900">Import Client Data - Metric System</h2>
+                <p className="text-gray-600">Upload your CSV file or paste the data below (weights will be converted to kg)</p>
               </div>
             </div>
             <button
@@ -290,7 +296,7 @@ const CSVImport: React.FC<CSVImportProps> = ({ onImport, onClose }) => {
               {/* Preview Header */}
               <div className="flex items-center space-x-2 text-green-600">
                 <CheckCircle className="h-5 w-5" />
-                <span className="font-medium">Preview: {previewData.length} clients ready to import</span>
+                <span className="font-medium">Preview: {previewData.length} clients ready to import (metric system)</span>
               </div>
 
               {/* Preview Table */}
@@ -300,8 +306,9 @@ const CSVImport: React.FC<CSVImportProps> = ({ onImport, onClose }) => {
                     <thead className="bg-gray-50 sticky top-0">
                       <tr>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Start Weight</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Current Weight</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Start Weight (kg)</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Current Weight (kg)</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Height (cm)</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Weight Entries</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Health Issues</th>
@@ -311,8 +318,9 @@ const CSVImport: React.FC<CSVImportProps> = ({ onImport, onClose }) => {
                       {previewData.map((client, index) => (
                         <tr key={index} className="hover:bg-gray-50">
                           <td className="px-4 py-3 text-sm font-medium text-gray-900">{client.name}</td>
-                          <td className="px-4 py-3 text-sm text-gray-600">{client.startWeight} lbs</td>
-                          <td className="px-4 py-3 text-sm text-gray-600">{client.currentWeight} lbs</td>
+                          <td className="px-4 py-3 text-sm text-gray-600">{client.startWeight} kg</td>
+                          <td className="px-4 py-3 text-sm text-gray-600">{client.currentWeight} kg</td>
+                          <td className="px-4 py-3 text-sm text-gray-600">{client.height} cm</td>
                           <td className="px-4 py-3 text-sm text-gray-600">{client.weightEntries.length} entries</td>
                           <td className="px-4 py-3">
                             <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
