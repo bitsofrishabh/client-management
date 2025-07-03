@@ -1,14 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
-import { Heart, Target, Users, Award, Send, Brain, FileText, MessageCircle, Moon, Shield, Stethoscope, Clock, CheckCircle } from 'lucide-react';
-import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
-import { ReferralSubmission } from '../types';
+import { Brain, FileText, MessageCircle, Moon, Shield, Stethoscope, Clock, CheckCircle, Target, Users, BookOpen, TrendingUp, Heart } from 'lucide-react';
 
 const HomePage: React.FC = () => {
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<ReferralSubmission>();
-
-  const responsibilities = [
+  const clientResponsibilities = [
     {
       icon: <Brain className="h-6 w-6" />,
       title: "Commitment & Mind-set",
@@ -51,12 +46,33 @@ const HomePage: React.FC = () => {
     }
   ];
 
-  const onSubmitReferral = (data: ReferralSubmission) => {
-    // Mock API call
-    console.log('Referral submitted:', data);
-    toast.success('Thank you for your referral! We\'ll be in touch soon.');
-    reset();
-  };
+  const coachResponsibilities = [
+    {
+      icon: <Target className="h-6 w-6" />,
+      title: "Assessment & Goal Setting",
+      description: "Conduct thorough intake (medical history, lifestyle, diet, activity, labs). Help the client set SMART goals (specific, measurable, attainable, relevant, time-bound)."
+    },
+    {
+      icon: <Users className="h-6 w-6" />,
+      title: "Personalized Program Design",
+      description: "Create nutrition plan or macro targets that fit client's culture, budget, skill level. Program workouts and activity targets tailored to fitness level, equipment, injuries. Integrate behavioural-change strategies (habit stacking, environmental cues)."
+    },
+    {
+      icon: <BookOpen className="h-6 w-6" />,
+      title: "Education & Skill Building",
+      description: "Teach portion control, label reading, meal prep basics. Explain exercise technique, tempo, progression. Provide resources (recipes, grocery lists, video demos)."
+    },
+    {
+      icon: <TrendingUp className="h-6 w-6" />,
+      title: "Ongoing Monitoring & Data Review",
+      description: "Review food logs, weight trends, wearable-tracker data, mood & sleep reports. Adjust calories, macros, or training volume based on objective and subjective feedback. Track non-scale victories (energy, mobility, medical markers)."
+    },
+    {
+      icon: <Heart className="h-6 w-6" />,
+      title: "Motivation & Accountability",
+      description: "Celebrate wins, highlight improvements, re-frame setbacks positively. Use motivational interviewing to uncover deeper 'why'. Hold client accountable to commitments without shaming."
+    }
+  ];
 
   return (
     <div className="min-h-screen">
@@ -101,7 +117,7 @@ const HomePage: React.FC = () => {
           </motion.div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-6">
-            {responsibilities.map((item, index) => (
+            {clientResponsibilities.map((item, index) => (
               <motion.div
                 key={index}
                 initial={{ opacity: 0, y: 20 }}
@@ -110,6 +126,43 @@ const HomePage: React.FC = () => {
                 className="bg-gradient-to-br from-blue-50 to-emerald-50 p-6 rounded-2xl hover:shadow-lg transition-shadow duration-300 h-full"
               >
                 <div className="bg-gradient-to-r from-blue-600 to-emerald-600 text-white p-3 rounded-lg w-fit mb-4">
+                  {item.icon}
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">{item.title}</h3>
+                <p className="text-gray-600 text-sm leading-relaxed">{item.description}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Coach Responsibilities */}
+      <section className="py-16 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Coach Responsibilities
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Our commitment to your success through professional expertise, personalized guidance, and ongoing support:
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+            {coachResponsibilities.map((item, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                className="bg-gradient-to-br from-purple-50 to-pink-50 p-6 rounded-2xl hover:shadow-lg transition-shadow duration-300 h-full"
+              >
+                <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-3 rounded-lg w-fit mb-4">
                   {item.icon}
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">{item.title}</h3>
@@ -144,7 +197,7 @@ const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* Referral Form */}
+      {/* Referral Benefits */}
       <section className="py-16 bg-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
@@ -154,159 +207,54 @@ const HomePage: React.FC = () => {
             className="text-center mb-12"
           >
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Refer a Friend
+              Referral Benefits
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
               Know someone who could benefit from our fitness program? Refer them and help them start their journey to better health!
             </p>
           </motion.div>
 
-          <div className="grid lg:grid-cols-2 gap-12 items-start">
-            {/* Benefits */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6 }}
-            >
-              <h3 className="text-2xl font-bold text-gray-900 mb-6">Referral Benefits</h3>
-              <div className="space-y-4">
-                <div className="flex items-start space-x-3">
-                  <div className="flex-shrink-0 w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mt-1">
-                    <div className="w-2 h-2 bg-green-600 rounded-full"></div>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Free Month for You</h4>
-                    <p className="text-gray-600">Get a free month of coaching when your referral signs up</p>
-                  </div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="bg-gradient-to-br from-blue-50 to-emerald-50 p-8 rounded-2xl"
+          >
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="text-center">
+                <div className="bg-gradient-to-r from-blue-600 to-emerald-600 text-white p-4 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl">🎁</span>
                 </div>
-                <div className="flex items-start space-x-3">
-                  <div className="flex-shrink-0 w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mt-1">
-                    <div className="w-2 h-2 bg-green-600 rounded-full"></div>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Discounted Rate for Friend</h4>
-                    <p className="text-gray-600">Your friend gets 20% off their first month</p>
-                  </div>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <div className="flex-shrink-0 w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mt-1">
-                    <div className="w-2 h-2 bg-green-600 rounded-full"></div>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Exclusive Community Access</h4>
-                    <p className="text-gray-600">Both get access to our exclusive referral community</p>
-                  </div>
-                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Free Month for You</h3>
+                <p className="text-gray-600">Get a free month of coaching when your referral signs up</p>
               </div>
-            </motion.div>
-
-            {/* Form */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6 }}
-              className="bg-gradient-to-br from-blue-50 to-emerald-50 p-8 rounded-2xl"
-            >
-              <form onSubmit={handleSubmit(onSubmitReferral)} className="space-y-6">
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="referrerName" className="block text-sm font-medium text-gray-700 mb-2">
-                      Your Name *
-                    </label>
-                    <input
-                      id="referrerName"
-                      {...register('referrerName', { required: 'Your name is required' })}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                      placeholder="Enter your name"
-                    />
-                    {errors.referrerName && (
-                      <p className="mt-1 text-sm text-red-600">{errors.referrerName.message}</p>
-                    )}
-                  </div>
-                  <div>
-                    <label htmlFor="referrerEmail" className="block text-sm font-medium text-gray-700 mb-2">
-                      Your Email *
-                    </label>
-                    <input
-                      id="referrerEmail"
-                      type="email"
-                      {...register('referrerEmail', { 
-                        required: 'Your email is required',
-                        pattern: {
-                          value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                          message: 'Invalid email address'
-                        }
-                      })}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                      placeholder="your@email.com"
-                    />
-                    {errors.referrerEmail && (
-                      <p className="mt-1 text-sm text-red-600">{errors.referrerEmail.message}</p>
-                    )}
-                  </div>
+              
+              <div className="text-center">
+                <div className="bg-gradient-to-r from-blue-600 to-emerald-600 text-white p-4 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl">💰</span>
                 </div>
-
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="friendName" className="block text-sm font-medium text-gray-700 mb-2">
-                      Friend's Name *
-                    </label>
-                    <input
-                      id="friendName"
-                      {...register('friendName', { required: 'Friend\'s name is required' })}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                      placeholder="Enter friend's name"
-                    />
-                    {errors.friendName && (
-                      <p className="mt-1 text-sm text-red-600">{errors.friendName.message}</p>
-                    )}
-                  </div>
-                  <div>
-                    <label htmlFor="friendEmail" className="block text-sm font-medium text-gray-700 mb-2">
-                      Friend's Email *
-                    </label>
-                    <input
-                      id="friendEmail"
-                      type="email"
-                      {...register('friendEmail', { 
-                        required: 'Friend\'s email is required',
-                        pattern: {
-                          value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                          message: 'Invalid email address'
-                        }
-                      })}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                      placeholder="friend@email.com"
-                    />
-                    {errors.friendEmail && (
-                      <p className="mt-1 text-sm text-red-600">{errors.friendEmail.message}</p>
-                    )}
-                  </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Discounted Rate for Friend</h3>
+                <p className="text-gray-600">Your friend gets 20% off their first month</p>
+              </div>
+              
+              <div className="text-center">
+                <div className="bg-gradient-to-r from-blue-600 to-emerald-600 text-white p-4 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl">👥</span>
                 </div>
-
-                <div>
-                  <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
-                    Personal Message (Optional)
-                  </label>
-                  <textarea
-                    id="message"
-                    rows={4}
-                    {...register('message')}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                    placeholder="Add a personal note for your friend..."
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full flex items-center justify-center space-x-2 bg-gradient-to-r from-blue-600 to-emerald-600 text-white px-6 py-3 rounded-lg hover:shadow-lg transition-shadow duration-200 font-semibold"
-                >
-                  <Send className="h-5 w-5" />
-                  <span>Send Referral</span>
-                </button>
-              </form>
-            </motion.div>
-          </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Exclusive Community Access</h3>
+                <p className="text-gray-600">Both get access to our exclusive referral community</p>
+              </div>
+            </div>
+            
+            <div className="text-center mt-8">
+              <a
+                href="mailto:coach@fitwithrishabh.com?subject=Referral%20Request&body=Hi,%20I%20would%20like%20to%20refer%20a%20friend%20to%20your%20fitness%20program."
+                className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-emerald-600 text-white px-8 py-3 rounded-lg hover:shadow-lg transition-shadow duration-200 font-semibold"
+              >
+                <span>Contact Us for Referrals</span>
+              </a>
+            </div>
+          </motion.div>
         </div>
       </section>
     </div>
