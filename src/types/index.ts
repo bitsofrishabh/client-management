@@ -37,7 +37,7 @@ export interface Product {
   id: string;
   name: string;
   description: string;
-  category: 'supplements' | 'equipment' | 'apparel' | 'accessories';
+  category: 'green-tea' | 'apple-cider-vinegar' | 'seeds-dry-fruits' | 'grains' | 'workout-essentials' | 'supplements' | 'weight-machine';
   price: string;
   imageUrl: string;
   purchaseUrl: string;
