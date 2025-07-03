@@ -1,8 +1,20 @@
 import React, { useState, useMemo } from 'react';
-import { motion } from 'framer-motion';
-import { Plus, Search, Filter, Users, TrendingUp, Calendar, MoreVertical, Edit, Trash2, FileText, Upload } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Plus, Search, Filter, Users, TrendingUp, Calendar, MoreVertical, Edit, Trash2, FileText, Upload, Grid, Table, X, Save, User, Mail, Target, Calendar as CalendarIcon, Activity, AlertCircle } from 'lucide-react';
 import { Client } from '../../types';
 import { toast } from 'sonner';
+
+interface ClientFormData {
+  name: string;
+  email: string;
+  startDate: string;
+  startWeight: number;
+  goalWeight: number;
+  healthIssues: string;
+  dietEndDate: string;
+  status: 'active' | 'inactive' | 'yet-to-start' | 'completed';
+  notes: string;
+}
 
 const ClientManagement: React.FC = () => {
   const [clients, setClients] = useState<Client[]>([
@@ -16,6 +28,8 @@ const ClientManagement: React.FC = () => {
       goalWeight: 160,
       status: 'active',
       notes: 'Making excellent progress with consistency in workouts and nutrition.',
+      healthIssues: 'Mild hypertension',
+      dietEndDate: '2024-06-15',
       weightEntries: [
         { date: '2024-01-15', weight: 180 },
         { date: '2024-01-22', weight: 178 },
@@ -36,6 +50,8 @@ const ClientManagement: React.FC = () => {
       goalWeight: 130,
       status: 'active',
       notes: 'Focused on strength training and muscle building.',
+      healthIssues: 'None',
+      dietEndDate: '2024-07-01',
       weightEntries: [
         { date: '2024-02-01', weight: 140 },
         { date: '2024-02-08', weight: 139 },
@@ -53,6 +69,8 @@ const ClientManagement: React.FC = () => {
       goalWeight: 180,
       status: 'yet-to-start',
       notes: 'Scheduled to begin program next week.',
+      healthIssues: 'Diabetes Type 2',
+      dietEndDate: '2024-08-01',
       weightEntries: [
         { date: '2024-03-01', weight: 200 }
       ]
@@ -61,8 +79,23 @@ const ClientManagement: React.FC = () => {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [viewMode, setViewMode] = useState<'table' | 'grid' | 'calendar'>('table');
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+
+  const [formData, setFormData] = useState<ClientFormData>({
+    name: '',
+    email: '',
+    startDate: '',
+    startWeight: 0,
+    goalWeight: 0,
+    healthIssues: '',
+    dietEndDate: '',
+    status: 'yet-to-start',
+    notes: ''
+  });
 
   const statusOptions = [
     { value: 'all', label: 'All Status' },
@@ -99,6 +132,11 @@ const ClientManagement: React.FC = () => {
     return Math.round((currentLoss / totalLoss) * 100);
   };
 
+  const calculateWeightLoss = (client: Client) => {
+    if (!client.currentWeight) return 0;
+    return client.startWeight - client.currentWeight;
+  };
+
   const handleDeleteClient = (clientId: string) => {
     if (window.confirm('Are you sure you want to delete this client?')) {
       setClients(clients.filter(client => client.id !== clientId));
@@ -106,40 +144,414 @@ const ClientManagement: React.FC = () => {
     }
   };
 
-  const handleCSVImport = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      // Mock CSV import
-      toast.success('CSV file imported successfully!');
-      console.log('Importing CSV file:', file.name);
+  const handleSubmitForm = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (editingClient) {
+      // Update existing client
+      setClients(clients.map(client => 
+        client.id === editingClient.id 
+          ? { 
+              ...client, 
+              ...formData,
+              currentWeight: formData.startWeight,
+              weightEntries: [{ date: formData.startDate, weight: formData.startWeight }]
+            }
+          : client
+      ));
+      toast.success('Client updated successfully');
+      setEditingClient(null);
+    } else {
+      // Add new client
+      const newClient: Client = {
+        id: Date.now().toString(),
+        ...formData,
+        currentWeight: formData.startWeight,
+        weightEntries: [{ date: formData.startDate, weight: formData.startWeight }]
+      };
+      setClients([...clients, newClient]);
+      toast.success('Client added successfully');
     }
+    
+    setShowAddForm(false);
+    setFormData({
+      name: '',
+      email: '',
+      startDate: '',
+      startWeight: 0,
+      goalWeight: 0,
+      healthIssues: '',
+      dietEndDate: '',
+      status: 'yet-to-start',
+      notes: ''
+    });
   };
+
+  const handleEditClient = (client: Client) => {
+    setEditingClient(client);
+    setFormData({
+      name: client.name,
+      email: client.email,
+      startDate: client.startDate,
+      startWeight: client.startWeight,
+      goalWeight: client.goalWeight || 0,
+      healthIssues: client.healthIssues || '',
+      dietEndDate: client.dietEndDate || '',
+      status: client.status,
+      notes: client.notes
+    });
+    setShowAddForm(true);
+  };
+
+  const getDaysInMonth = (month: number, year: number) => {
+    return new Date(year, month + 1, 0).getDate();
+  };
+
+  const getWeightForDate = (client: Client, date: string) => {
+    const entry = client.weightEntries.find(entry => entry.date === date);
+    return entry ? entry.weight : null;
+  };
+
+  const updateWeight = (clientId: string, date: string, weight: number) => {
+    setClients(clients.map(client => {
+      if (client.id === clientId) {
+        const existingEntryIndex = client.weightEntries.findIndex(entry => entry.date === date);
+        let updatedEntries;
+        
+        if (existingEntryIndex >= 0) {
+          updatedEntries = [...client.weightEntries];
+          updatedEntries[existingEntryIndex] = { date, weight };
+        } else {
+          updatedEntries = [...client.weightEntries, { date, weight }];
+        }
+        
+        // Update current weight to the latest entry
+        const latestEntry = updatedEntries.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
+        
+        return {
+          ...client,
+          weightEntries: updatedEntries,
+          currentWeight: latestEntry.weight
+        };
+      }
+      return client;
+    }));
+    toast.success('Weight updated successfully');
+  };
+
+  const renderCalendarView = () => {
+    const daysInMonth = getDaysInMonth(selectedMonth, selectedYear);
+    const monthName = new Date(selectedYear, selectedMonth).toLocaleString('default', { month: 'long' });
+    
+    return (
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="p-6 border-b border-gray-200">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xl font-semibold text-gray-900">
+              Weight Tracking Calendar - {monthName} {selectedYear}
+            </h3>
+            <div className="flex items-center space-x-4">
+              <select
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                {Array.from({ length: 12 }, (_, i) => (
+                  <option key={i} value={i}>
+                    {new Date(2024, i).toLocaleString('default', { month: 'long' })}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                {Array.from({ length: 5 }, (_, i) => (
+                  <option key={i} value={2024 + i}>
+                    {2024 + i}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+        
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-10">
+                  Client
+                </th>
+                {Array.from({ length: daysInMonth }, (_, i) => (
+                  <th key={i + 1} className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[60px]">
+                    {i + 1}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {filteredClients.map((client) => (
+                <tr key={client.id} className="hover:bg-gray-50">
+                  <td className="px-4 py-3 whitespace-nowrap sticky left-0 bg-white z-10 border-r border-gray-200">
+                    <div className="text-sm font-medium text-gray-900">{client.name}</div>
+                  </td>
+                  {Array.from({ length: daysInMonth }, (_, i) => {
+                    const day = i + 1;
+                    const dateStr = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                    const weight = getWeightForDate(client, dateStr);
+                    
+                    return (
+                      <td key={day} className="px-2 py-3 text-center">
+                        <input
+                          type="number"
+                          value={weight || ''}
+                          onChange={(e) => {
+                            const newWeight = parseFloat(e.target.value);
+                            if (!isNaN(newWeight) && newWeight > 0) {
+                              updateWeight(client.id, dateStr, newWeight);
+                            }
+                          }}
+                          className="w-14 px-1 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-center"
+                          placeholder="--"
+                          step="0.1"
+                          min="0"
+                        />
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  };
+
+  const renderGridView = () => (
+    <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      {filteredClients.map((client, index) => (
+        <motion.div
+          key={client.id}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: index * 0.1 }}
+          className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-shadow duration-300"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="bg-gradient-to-r from-blue-600 to-emerald-600 p-3 rounded-full">
+              <User className="h-6 w-6 text-white" />
+            </div>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => handleEditClient(client)}
+                className="text-blue-600 hover:text-blue-900 transition-colors"
+              >
+                <Edit className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => handleDeleteClient(client.id)}
+                className="text-red-600 hover:text-red-900 transition-colors"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+          
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">{client.name}</h3>
+          <p className="text-sm text-gray-600 mb-4">{client.email}</p>
+          
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Weight Lost:</span>
+              <span className="text-sm font-semibold text-green-600">
+                {calculateWeightLoss(client).toFixed(1)} lbs
+              </span>
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Health Issues:</span>
+              <span className="text-sm text-gray-900 truncate max-w-[120px]">
+                {client.healthIssues || 'None'}
+              </span>
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Diet End Date:</span>
+              <span className="text-sm text-gray-900">
+                {client.dietEndDate ? new Date(client.dietEndDate).toLocaleDateString() : 'N/A'}
+              </span>
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Status:</span>
+              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(client.status)}`}>
+                {client.status.replace('-', ' ')}
+              </span>
+            </div>
+            
+            {client.goalWeight && client.currentWeight && (
+              <div className="mt-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-gray-600">Progress:</span>
+                  <span className="text-sm font-semibold text-gray-900">{calculateProgress(client)}%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div
+                    className="bg-gradient-to-r from-blue-600 to-emerald-600 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${Math.min(calculateProgress(client), 100)}%` }}
+                  ></div>
+                </div>
+              </div>
+            )}
+          </div>
+        </motion.div>
+      ))}
+    </div>
+  );
+
+  const renderTableView = () => (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead className="bg-gray-50 border-b border-gray-200">
+            <tr>
+              <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
+              <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start Date</th>
+              <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Weight Progress</th>
+              <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Health Issues</th>
+              <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Diet End Date</th>
+              <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+              <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Progress</th>
+              <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {filteredClients.map((client) => (
+              <tr key={client.id} className="hover:bg-gray-50 transition-colors">
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div>
+                    <div className="text-sm font-medium text-gray-900">{client.name}</div>
+                    <div className="text-sm text-gray-500">{client.email}</div>
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {new Date(client.startDate).toLocaleDateString()}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <div>
+                    <span className="font-medium">{client.startWeight} lbs</span>
+                    {client.currentWeight && (
+                      <>
+                        <span className="text-gray-500"> → </span>
+                        <span className="font-medium">{client.currentWeight} lbs</span>
+                        <div className="text-xs text-green-600">
+                          -{calculateWeightLoss(client).toFixed(1)} lbs
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <div className="max-w-[150px] truncate">
+                    {client.healthIssues || 'None'}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {client.dietEndDate ? new Date(client.dietEndDate).toLocaleDateString() : 'N/A'}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(client.status)}`}>
+                    {client.status.replace('-', ' ')}
+                  </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {client.goalWeight && client.currentWeight ? (
+                    <div className="flex items-center">
+                      <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
+                        <div
+                          className="bg-gradient-to-r from-blue-600 to-emerald-600 h-2 rounded-full"
+                          style={{ width: `${Math.min(calculateProgress(client), 100)}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-sm text-gray-600">{calculateProgress(client)}%</span>
+                    </div>
+                  ) : (
+                    <span className="text-sm text-gray-400">-</span>
+                  )}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => handleEditClient(client)}
+                      className="text-blue-600 hover:text-blue-900 transition-colors"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteClient(client.id)}
+                      className="text-red-600 hover:text-red-900 transition-colors"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[95%] mx-auto px-4">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8"
+          className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8"
         >
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Client Management</h1>
-            <p className="text-gray-600">Manage your fitness coaching clients and track their progress</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Client Management Dashboard</h1>
+            <p className="text-gray-600">Manage your fitness coaching clients and track their daily progress</p>
           </div>
-          <div className="flex space-x-3 mt-4 sm:mt-0">
-            <label className="flex items-center space-x-2 bg-white text-gray-700 px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors cursor-pointer">
-              <Upload className="h-4 w-4" />
-              <span>Import CSV</span>
-              <input
-                type="file"
-                accept=".csv"
-                onChange={handleCSVImport}
-                className="hidden"
-              />
-            </label>
+          <div className="flex items-center space-x-3 mt-4 lg:mt-0">
+            {/* View Mode Toggles */}
+            <div className="flex items-center bg-white rounded-lg border border-gray-300 p-1">
+              <button
+                onClick={() => setViewMode('table')}
+                className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  viewMode === 'table' ? 'bg-blue-600 text-white' : 'text-gray-700 hover:text-blue-600'
+                }`}
+              >
+                <Table className="h-4 w-4" />
+                <span>Table</span>
+              </button>
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  viewMode === 'grid' ? 'bg-blue-600 text-white' : 'text-gray-700 hover:text-blue-600'
+                }`}
+              >
+                <Grid className="h-4 w-4" />
+                <span>Grid</span>
+              </button>
+              <button
+                onClick={() => setViewMode('calendar')}
+                className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  viewMode === 'calendar' ? 'bg-blue-600 text-white' : 'text-gray-700 hover:text-blue-600'
+                }`}
+              >
+                <CalendarIcon className="h-4 w-4" />
+                <span>Calendar</span>
+              </button>
+            </div>
+            
             <button
               onClick={() => setShowAddForm(true)}
               className="flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-emerald-600 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-shadow"
@@ -196,106 +608,35 @@ const ClientManagement: React.FC = () => {
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               />
             </div>
-            <div className="relative">
-              <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="pl-10 pr-8 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors appearance-none bg-white min-w-[150px]"
-              >
-                {statusOptions.map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+            
+            {/* Status Filter Chips */}
+            <div className="flex flex-wrap gap-2">
+              {statusOptions.map((status) => (
+                <button
+                  key={status.value}
+                  onClick={() => setStatusFilter(status.value)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                    statusFilter === status.value
+                      ? 'bg-gradient-to-r from-blue-600 to-emerald-600 text-white shadow-lg'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {status.label}
+                </button>
+              ))}
             </div>
           </div>
         </motion.div>
 
-        {/* Clients Table */}
+        {/* Main Content */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.5 }}
-          className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden"
         >
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start Date</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Weight Progress</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Progress</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredClients.map((client) => (
-                  <tr key={client.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">{client.name}</div>
-                        <div className="text-sm text-gray-500">{client.email}</div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {new Date(client.startDate).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      <div>
-                        <span className="font-medium">{client.startWeight} lbs</span>
-                        {client.currentWeight && (
-                          <>
-                            <span className="text-gray-500"> → </span>
-                            <span className="font-medium">{client.currentWeight} lbs</span>
-                          </>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(client.status)}`}>
-                        {client.status.replace('-', ' ')}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {client.goalWeight && client.currentWeight ? (
-                        <div className="flex items-center">
-                          <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
-                            <div
-                              className="bg-gradient-to-r from-blue-600 to-emerald-600 h-2 rounded-full"
-                              style={{ width: `${Math.min(calculateProgress(client), 100)}%` }}
-                            ></div>
-                          </div>
-                          <span className="text-sm text-gray-600">{calculateProgress(client)}%</span>
-                        </div>
-                      ) : (
-                        <span className="text-sm text-gray-400">-</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex items-center space-x-2">
-                        <button
-                          onClick={() => setEditingClient(client)}
-                          className="text-blue-600 hover:text-blue-900 transition-colors"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteClient(client.id)}
-                          className="text-red-600 hover:text-red-900 transition-colors"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {viewMode === 'table' && renderTableView()}
+          {viewMode === 'grid' && renderGridView()}
+          {viewMode === 'calendar' && renderCalendarView()}
         </motion.div>
 
         {/* No Results */}
@@ -315,6 +656,221 @@ const ClientManagement: React.FC = () => {
             </p>
           </motion.div>
         )}
+
+        {/* Add/Edit Client Modal */}
+        <AnimatePresence>
+          {showAddForm && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+            >
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+              >
+                <div className="p-6 border-b border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-2xl font-bold text-gray-900">
+                      {editingClient ? 'Edit Client' : 'Add New Client'}
+                    </h2>
+                    <button
+                      onClick={() => {
+                        setShowAddForm(false);
+                        setEditingClient(null);
+                        setFormData({
+                          name: '',
+                          email: '',
+                          startDate: '',
+                          startWeight: 0,
+                          goalWeight: 0,
+                          healthIssues: '',
+                          dietEndDate: '',
+                          status: 'yet-to-start',
+                          notes: ''
+                        });
+                      }}
+                      className="text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      <X className="h-6 w-6" />
+                    </button>
+                  </div>
+                </div>
+
+                <form onSubmit={handleSubmitForm} className="p-6 space-y-6">
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <User className="h-4 w-4 inline mr-1" />
+                        Full Name
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Enter client's full name"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <Mail className="h-4 w-4 inline mr-1" />
+                        Email Address
+                      </label>
+                      <input
+                        type="email"
+                        required
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Enter email address"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <CalendarIcon className="h-4 w-4 inline mr-1" />
+                        Start Date
+                      </label>
+                      <input
+                        type="date"
+                        required
+                        value={formData.startDate}
+                        onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <CalendarIcon className="h-4 w-4 inline mr-1" />
+                        Diet End Date
+                      </label>
+                      <input
+                        type="date"
+                        value={formData.dietEndDate}
+                        onChange={(e) => setFormData({ ...formData, dietEndDate: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <Activity className="h-4 w-4 inline mr-1" />
+                        Starting Weight (lbs)
+                      </label>
+                      <input
+                        type="number"
+                        required
+                        min="0"
+                        step="0.1"
+                        value={formData.startWeight || ''}
+                        onChange={(e) => setFormData({ ...formData, startWeight: parseFloat(e.target.value) || 0 })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Enter starting weight"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <Target className="h-4 w-4 inline mr-1" />
+                        Goal Weight (lbs)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.1"
+                        value={formData.goalWeight || ''}
+                        onChange={(e) => setFormData({ ...formData, goalWeight: parseFloat(e.target.value) || 0 })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Enter goal weight"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <AlertCircle className="h-4 w-4 inline mr-1" />
+                        Health Issues
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.healthIssues}
+                        onChange={(e) => setFormData({ ...formData, healthIssues: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Any health concerns or conditions"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Status
+                      </label>
+                      <select
+                        value={formData.status}
+                        onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="yet-to-start">Yet to Start</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                        <option value="completed">Completed</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Notes
+                    </label>
+                    <textarea
+                      rows={4}
+                      value={formData.notes}
+                      onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Additional notes about the client..."
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-end space-x-4 pt-6 border-t border-gray-200">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowAddForm(false);
+                        setEditingClient(null);
+                        setFormData({
+                          name: '',
+                          email: '',
+                          startDate: '',
+                          startWeight: 0,
+                          goalWeight: 0,
+                          healthIssues: '',
+                          dietEndDate: '',
+                          status: 'yet-to-start',
+                          notes: ''
+                        });
+                      }}
+                      className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="flex items-center space-x-2 px-6 py-2 bg-gradient-to-r from-blue-600 to-emerald-600 text-white rounded-lg hover:shadow-lg transition-shadow"
+                    >
+                      <Save className="h-4 w-4" />
+                      <span>{editingClient ? 'Update Client' : 'Add Client'}</span>
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

@@ -15,6 +15,8 @@ export interface Client {
   goalWeight?: number;
   status: 'active' | 'inactive' | 'yet-to-start' | 'completed';
   notes: string;
+  healthIssues?: string;
+  dietEndDate?: string;
   weightEntries: WeightEntry[];
 }
 
