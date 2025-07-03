@@ -1,8 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Search, Users, TrendingUp, Calendar, Edit, Trash2, FileText, Grid, Table, X, Save, User, Mail, Target, Calendar as CalendarIcon, Activity, AlertCircle, MessageSquare, Send, TrendingDown, Weight, Clock } from 'lucide-react';
+import { Plus, Search, Users, TrendingUp, Calendar, Edit, Trash2, FileText, Grid, Table, X, Save, User, Mail, Target, Calendar as CalendarIcon, Activity, AlertCircle, MessageSquare, Send, TrendingDown, Weight, Clock, Upload } from 'lucide-react';
 import { Client, Comment } from '../../types';
 import { toast } from 'sonner';
+import CSVImport from '../../components/CSVImport';
 
 interface ClientFormData {
   name: string;
@@ -118,6 +119,7 @@ const ClientManagement: React.FC = () => {
   const [newComment, setNewComment] = useState('');
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [showCSVImport, setShowCSVImport] = useState(false);
 
   const [formData, setFormData] = useState<ClientFormData>({
     name: '',
@@ -210,6 +212,11 @@ const ClientManagement: React.FC = () => {
   const getHealthIssueColor = (issue: string) => {
     if (issue.toLowerCase() === 'none') return 'bg-green-100 text-green-800';
     return 'bg-red-100 text-red-800';
+  };
+
+  const handleCSVImport = (importedClients: Client[]) => {
+    setClients([...clients, ...importedClients]);
+    setShowCSVImport(false);
   };
 
   const renderWeightChart = (client: Client) => {
@@ -460,6 +467,13 @@ const ClientManagement: React.FC = () => {
           </div>
           <div className="flex items-center space-x-3 mt-4 lg:mt-0">
             <button
+              onClick={() => setShowCSVImport(true)}
+              className="flex items-center space-x-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-shadow"
+            >
+              <Upload className="h-4 w-4" />
+              <span>Import CSV</span>
+            </button>
+            <button
               onClick={() => setShowAddForm(true)}
               className="flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-emerald-600 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-shadow"
             >
@@ -474,7 +488,7 @@ const ClientManagement: React.FC = () => {
           {[
             { title: 'Total Clients', value: clients.length, icon: Users, color: 'from-blue-500 to-blue-600' },
             { title: 'Active Clients', value: clients.filter(c => c.status === 'active').length, icon: TrendingUp, color: 'from-green-500 to-green-600' },
-            { title: 'New This Month', value: 2, icon: Calendar, color: 'from-purple-500 to-purple-600' },
+            { title: 'New This Month', value: clients.filter(c => c.startDate.includes('2025-06')).length, icon: Calendar, color: 'from-purple-500 to-purple-600' },
             { title: 'Completed Programs', value: clients.filter(c => c.status === 'completed').length, icon: FileText, color: 'from-orange-500 to-orange-600' }
           ].map((stat, index) => (
             <motion.div
@@ -561,6 +575,16 @@ const ClientManagement: React.FC = () => {
             </p>
           </motion.div>
         )}
+
+        {/* CSV Import Modal */}
+        <AnimatePresence>
+          {showCSVImport && (
+            <CSVImport
+              onImport={handleCSVImport}
+              onClose={() => setShowCSVImport(false)}
+            />
+          )}
+        </AnimatePresence>
 
         {/* Client Profile Modal */}
         <AnimatePresence>
