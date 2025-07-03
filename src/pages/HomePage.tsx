@@ -1,58 +1,53 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronDown, ChevronUp, Heart, Target, Users, Award, Send } from 'lucide-react';
+import { Heart, Target, Users, Award, Send, Brain, FileText, MessageCircle, Moon, Shield, Stethoscope, Clock, CheckCircle } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { ReferralSubmission } from '../types';
 
 const HomePage: React.FC = () => {
-  const [showTerms, setShowTerms] = useState(false);
-  const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const { register, handleSubmit, reset, formState: { errors } } = useForm<ReferralSubmission>();
 
   const responsibilities = [
     {
+      icon: <Brain className="h-6 w-6" />,
+      title: "Commitment & Mind-set",
+      description: "Set clear, realistic goals with the coach. Treat the program as a priority (schedule sessions, meal prep, workouts). Approach setbacks as learning moments, not failures."
+    },
+    {
+      icon: <FileText className="h-6 w-6" />,
+      title: "Honest Tracking",
+      description: "Log meals, beverages, and snacks accurately (photos, app, or written journal). Record body weight, measurements, steps, sleep, and mood as instructed. Share dietary slip-ups instead of hiding them."
+    },
+    {
       icon: <Target className="h-6 w-6" />,
-      title: "Set Clear Goals",
-      description: "Define your fitness objectives and commit to achieving them with dedication and consistency."
+      title: "Adherence to Plans",
+      description: "Follow prescribed meal plan or calorie/macro targets. Perform workouts/steps as scheduled (modify only after consulting coach). Take supplements/meds exactly as recommended."
     },
     {
-      icon: <Heart className="h-6 w-6" />,
-      title: "Follow the Program",
-      description: "Adhere to your personalized workout and nutrition plan for optimal results."
+      icon: <MessageCircle className="h-6 w-6" />,
+      title: "Communication",
+      description: "Check-in on agreed days (weekly form, photo updates, or calls). Report injuries, illnesses, travel plans, or high-stress events early. Ask questions instead of guessing."
     },
     {
-      icon: <Users className="h-6 w-6" />,
-      title: "Communicate Regularly",
-      description: "Keep in touch with your coach, ask questions, and provide feedback on your progress."
+      icon: <Moon className="h-6 w-6" />,
+      title: "Lifestyle Habits",
+      description: "Prioritise 7-9 h quality sleep. Stay hydrated (e.g., 2.5–3 L/day unless otherwise advised). Manage stress with breathwork, hobbies, or meditation."
     },
     {
-      icon: <Award className="h-6 w-6" />,
-      title: "Track Your Progress",
-      description: "Monitor your achievements, log workouts, and celebrate milestones along the way."
-    }
-  ];
-
-  const termsData = [
-    {
-      id: 'program-overview',
-      title: 'Program Overview',
-      content: 'Our comprehensive fitness coaching program is designed to help you achieve your health and wellness goals through personalized training, nutrition guidance, and ongoing support.'
+      icon: <CheckCircle className="h-6 w-6" />,
+      title: "Accountability & Self-Reflection",
+      description: "Review weekly progress and note triggers for overeating or missed workouts. Celebrate small wins (e.g., better energy, looser jeans). Adjust personal environment (remove junk food, plan groceries)."
     },
     {
-      id: 'commitment',
-      title: 'Client Commitment',
-      content: 'Clients are expected to follow their personalized program, attend scheduled sessions, and maintain open communication with their assigned coach.'
+      icon: <Clock className="h-6 w-6" />,
+      title: "Respect & Ethics",
+      description: "Arrive on time for sessions/check-ins. Provide at least 24 h notice for rescheduling. Follow payment schedules and program policies."
     },
     {
-      id: 'privacy',
-      title: 'Privacy & Data',
-      content: 'We protect your personal information and health data in accordance with privacy laws. Your information is used solely for program delivery and improvement.'
-    },
-    {
-      id: 'cancellation',
-      title: 'Cancellation Policy',
-      content: 'Clients may cancel their subscription with 30 days notice. Refunds are processed according to our refund policy terms.'
+      icon: <Stethoscope className="h-6 w-6" />,
+      title: "Medical Transparency",
+      description: "Disclose existing medical conditions, medications, or recent lab results. Obtain physician clearance when required. Inform coach immediately of adverse symptoms."
     }
   ];
 
@@ -98,81 +93,27 @@ const HomePage: React.FC = () => {
             className="text-center mb-12"
           >
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Your Responsibilities
+              Client Responsibilities
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Success in fitness requires commitment and consistency. Here's what we expect from you:
+              Success in fitness requires commitment and consistency. Here's what we expect from you across key areas:
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-6">
             {responsibilities.map((item, index) => (
               <motion.div
                 key={index}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="bg-gradient-to-br from-blue-50 to-emerald-50 p-6 rounded-2xl hover:shadow-lg transition-shadow duration-300"
+                className="bg-gradient-to-br from-blue-50 to-emerald-50 p-6 rounded-2xl hover:shadow-lg transition-shadow duration-300 h-full"
               >
                 <div className="bg-gradient-to-r from-blue-600 to-emerald-600 text-white p-3 rounded-lg w-fit mb-4">
                   {item.icon}
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">{item.title}</h3>
-                <p className="text-gray-600">{item.description}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Terms & Conditions */}
-      <section className="py-16 bg-gray-50">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-12"
-          >
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Terms & Conditions Guide
-            </h2>
-            <p className="text-lg text-gray-600">
-              Please review these important guidelines for our fitness program
-            </p>
-          </motion.div>
-
-          <div className="space-y-4">
-            {termsData.map((term) => (
-              <motion.div
-                key={term.id}
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4 }}
-                className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
-              >
-                <button
-                  onClick={() => setExpandedSection(expandedSection === term.id ? null : term.id)}
-                  className="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-50 transition-colors"
-                >
-                  <h3 className="text-lg font-semibold text-gray-900">{term.title}</h3>
-                  {expandedSection === term.id ? (
-                    <ChevronUp className="h-5 w-5 text-gray-500" />
-                  ) : (
-                    <ChevronDown className="h-5 w-5 text-gray-500" />
-                  )}
-                </button>
-                {expandedSection === term.id && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="px-6 pb-4"
-                  >
-                    <p className="text-gray-600">{term.content}</p>
-                  </motion.div>
-                )}
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">{item.title}</h3>
+                <p className="text-gray-600 text-sm leading-relaxed">{item.description}</p>
               </motion.div>
             ))}
           </div>
