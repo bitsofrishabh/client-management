@@ -92,7 +92,7 @@ const ClientManagement: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      <div className="w-full px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-none px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -186,39 +186,40 @@ const ClientManagement: React.FC = () => {
           </div>
         </motion.div>
 
-        {/* Clients Table - Full Width */}
+        {/* Clients Table - Full Width with Fixed Layout */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.5 }}
           className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden"
+          style={{ display: 'block', width: '100%' }}
         >
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-full">
+          <div className="w-full overflow-x-auto">
+            <table className="w-full table-fixed" style={{ minWidth: '1200px' }}>
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Weight Progress (kg)</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Height (cm)</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Health Issues</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Comments/Notes</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  <th className="w-48 px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
+                  <th className="w-40 px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Weight Progress (kg)</th>
+                  <th className="w-32 px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Height (cm)</th>
+                  <th className="w-32 px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="w-48 px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Health Issues</th>
+                  <th className="flex-1 px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Comments/Notes</th>
+                  <th className="w-32 px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredClients.map((client) => (
                   <tr key={client.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-6 py-4">
                       <div 
                         className="cursor-pointer hover:text-blue-600 transition-colors"
                         onClick={() => handleClientClick(client)}
                       >
-                        <div className="text-sm font-medium text-gray-900">{client.name}</div>
-                        <div className="text-sm text-gray-500">{client.email}</div>
+                        <div className="text-sm font-medium text-gray-900 truncate">{client.name}</div>
+                        <div className="text-sm text-gray-500 truncate">{client.email}</div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 text-sm text-gray-900">
                       <div>
                         <span className="font-medium">{client.startWeight} kg</span>
                         {client.currentWeight && (
@@ -229,15 +230,15 @@ const ClientManagement: React.FC = () => {
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 text-sm text-gray-900">
                       {client.height ? `${client.height} cm` : 'Not specified'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-6 py-4">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(client.status)}`}>
                         {client.status.replace('-', ' ')}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-6 py-4">
                       <div className="flex flex-wrap gap-1">
                         {client.healthIssues?.slice(0, 2).map((issue, idx) => (
                           <span
@@ -254,10 +255,12 @@ const ClientManagement: React.FC = () => {
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600 max-w-xs">
-                      <div className="truncate">{client.notes || 'No notes'}</div>
+                    <td className="px-6 py-4 text-sm text-gray-600">
+                      <div className="truncate max-w-xs" title={client.notes || 'No notes'}>
+                        {client.notes || 'No notes'}
+                      </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <td className="px-6 py-4 text-sm font-medium">
                       <div className="flex items-center space-x-2">
                         <button
                           onClick={() => handleClientClick(client)}
