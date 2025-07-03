@@ -388,6 +388,188 @@ const ClientManagement: React.FC = () => {
     </div>
   );
 
+  const renderGridView = () => (
+    <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      {filteredClients.map((client) => (
+        <motion.div
+          key={client.id}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-shadow"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <button
+              onClick={() => handleClientNameClick(client)}
+              className="text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors"
+            >
+              {client.name}
+            </button>
+            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(client.status)}`}>
+              {client.status.replace('-', ' ')}
+            </span>
+          </div>
+          
+          <div className="space-y-3">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">Weight Progress:</span>
+              <span className="font-medium">
+                {client.startWeight} → {client.currentWeight} lbs
+              </span>
+            </div>
+            
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">Weight Lost:</span>
+              <span className="font-medium text-green-600">
+                -{calculateWeightLoss(client).toFixed(1)} lbs
+              </span>
+            </div>
+            
+            <div>
+              <span className="text-sm text-gray-600">Health Issues:</span>
+              <div className="flex flex-wrap gap-1 mt-1">
+                {client.healthIssues?.slice(0, 2).map((issue, index) => (
+                  <span
+                    key={index}
+                    className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getHealthIssueColor(issue)}`}
+                  >
+                    {issue}
+                  </span>
+                ))}
+                {(client.healthIssues?.length || 0) > 2 && (
+                  <span className="text-xs text-gray-500">+{(client.healthIssues?.length || 0) - 2}</span>
+                )}
+              </div>
+            </div>
+            
+            <div className="flex items-center justify-between pt-3 border-t border-gray-200">
+              <div className="flex items-center space-x-1 text-sm text-gray-500">
+                <MessageSquare className="h-4 w-4" />
+                <span>{client.comments?.length || 0} comments</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => handleEditClient(client)}
+                  className="text-blue-600 hover:text-blue-900 transition-colors"
+                >
+                  <Edit className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => handleDeleteClient(client.id)}
+                  className="text-red-600 hover:text-red-900 transition-colors"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      ))}
+    </div>
+  );
+
+  const renderCalendarView = () => {
+    const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
+    const firstDayOfMonth = new Date(selectedYear, selectedMonth, 1).getDay();
+    const monthNames = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+
+    const getClientsForDate = (day: number) => {
+      const dateStr = `${selectedYear}-${(selectedMonth + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+      return filteredClients.filter(client => 
+        client.weightEntries.some(entry => entry.date === dateStr) ||
+        client.startDate === dateStr ||
+        client.dietEndDate === dateStr
+      );
+    };
+
+    return (
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+        {/* Calendar Header */}
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-lg font-semibold text-gray-900">
+            {monthNames[selectedMonth]} {selectedYear}
+          </h3>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => {
+                if (selectedMonth === 0) {
+                  setSelectedMonth(11);
+                  setSelectedYear(selectedYear - 1);
+                } else {
+                  setSelectedMonth(selectedMonth - 1);
+                }
+              }}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              ←
+            </button>
+            <button
+              onClick={() => {
+                if (selectedMonth === 11) {
+                  setSelectedMonth(0);
+                  setSelectedYear(selectedYear + 1);
+                } else {
+                  setSelectedMonth(selectedMonth + 1);
+                }
+              }}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              →
+            </button>
+          </div>
+        </div>
+
+        {/* Calendar Grid */}
+        <div className="grid grid-cols-7 gap-1">
+          {/* Day headers */}
+          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+            <div key={day} className="p-2 text-center text-sm font-medium text-gray-500">
+              {day}
+            </div>
+          ))}
+
+          {/* Empty cells for days before month starts */}
+          {Array.from({ length: firstDayOfMonth }, (_, i) => (
+            <div key={`empty-${i}`} className="p-2 h-20"></div>
+          ))}
+
+          {/* Calendar days */}
+          {Array.from({ length: daysInMonth }, (_, i) => {
+            const day = i + 1;
+            const clientsForDay = getClientsForDate(day);
+            
+            return (
+              <div
+                key={day}
+                className="p-2 h-20 border border-gray-100 hover:bg-gray-50 transition-colors"
+              >
+                <div className="text-sm font-medium text-gray-900 mb-1">{day}</div>
+                <div className="space-y-1">
+                  {clientsForDay.slice(0, 2).map(client => (
+                    <div
+                      key={client.id}
+                      className="text-xs bg-blue-100 text-blue-800 px-1 py-0.5 rounded truncate"
+                      title={client.name}
+                    >
+                      {client.name}
+                    </div>
+                  ))}
+                  {clientsForDay.length > 2 && (
+                    <div className="text-xs text-gray-500">
+                      +{clientsForDay.length - 2} more
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
   const handleSubmitForm = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -530,6 +712,43 @@ const ClientManagement: React.FC = () => {
               />
             </div>
             
+            {/* View Toggle Buttons */}
+            <div className="flex items-center bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => setViewMode('table')}
+                className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  viewMode === 'table'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <Table className="h-4 w-4" />
+                <span>Table</span>
+              </button>
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  viewMode === 'grid'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <Grid className="h-4 w-4" />
+                <span>Grid</span>
+              </button>
+              <button
+                onClick={() => setViewMode('calendar')}
+                className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  viewMode === 'calendar'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <Calendar className="h-4 w-4" />
+                <span>Calendar</span>
+              </button>
+            </div>
+            
             {/* Status Filter Chips */}
             <div className="flex flex-wrap gap-2">
               {statusOptions.map((status) => (
@@ -555,7 +774,9 @@ const ClientManagement: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.5 }}
         >
-          {renderTableView()}
+          {viewMode === 'table' && renderTableView()}
+          {viewMode === 'grid' && renderGridView()}
+          {viewMode === 'calendar' && renderCalendarView()}
         </motion.div>
 
         {/* No Results */}
