@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Filter, Play, Clock, BarChart3 } from 'lucide-react';
+import { Search, Filter, Clock, BarChart3 } from 'lucide-react';
 import { Workout } from '../types';
 
 const WorkoutsPage: React.FC = () => {
@@ -8,88 +8,106 @@ const WorkoutsPage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('all');
 
-  // Mock workout data
+  // Updated workout data with your specific videos
   const workouts: Workout[] = [
     {
       id: '1',
-      title: 'Full Body Dumbbell Workout',
-      description: 'Complete full-body strength training using dumbbells for all major muscle groups.',
+      title: '30 Min FULL BODY DUMBBELL WORKOUT at Home + HIIT Finisher',
+      description: 'Complete full-body strength training using dumbbells with an intense HIIT finisher to maximize results.',
       category: 'dumbbell',
-      videoUrl: 'https://www.youtube.com/embed/vc1E5CfRfos',
-      duration: '45 min',
+      videoUrl: 'https://www.youtube.com/embed/Jpxc0TUr9BI',
+      duration: '30 min',
       difficulty: 'intermediate'
     },
     {
       id: '2',
-      title: 'HIIT Cardio Blast',
-      description: 'High-intensity interval training to boost your metabolism and burn calories.',
+      title: '15 Minute Full Body Dumbbell Workout [Strength and Conditioning]',
+      description: 'Quick and effective full-body dumbbell workout focusing on strength and conditioning in just 15 minutes.',
+      category: 'dumbbell',
+      videoUrl: 'https://www.youtube.com/embed/xqVBoyKXbsA',
+      duration: '15 min',
+      difficulty: 'beginner'
+    },
+    {
+      id: '3',
+      title: '30 Min FULL BODY WORKOUT with WARM UP | No Equipment & No Repeat',
+      description: 'Complete bodyweight workout with warm-up, no equipment needed and no repeated exercises.',
+      category: 'bodyweight',
+      videoUrl: 'https://www.youtube.com/embed/UIPvIYsjfpo',
+      duration: '30 min',
+      difficulty: 'intermediate'
+    },
+    {
+      id: '4',
+      title: '30 Min Intense HIIT Workout For Fat Burn & Cardio No Equipment, No Repeats',
+      description: 'High-intensity interval training designed for maximum fat burn and cardiovascular improvement.',
       category: 'hiit',
-      videoUrl: 'https://www.youtube.com/embed/ml6cT4AZdqI',
+      videoUrl: 'https://www.youtube.com/embed/4nPKyvKmFi0',
       duration: '30 min',
       difficulty: 'advanced'
     },
     {
-      id: '3',
-      title: 'Bodyweight Beginner Routine',
-      description: 'Perfect starting point for fitness beginners using only body weight.',
-      category: 'bodyweight',
-      videoUrl: 'https://www.youtube.com/embed/IODxDxX7oi4',
-      duration: '25 min',
-      difficulty: 'beginner'
-    },
-    {
-      id: '4',
-      title: 'Core Strength Builder',
-      description: 'Targeted core workout to build strength and stability in your midsection.',
-      category: 'core',
-      videoUrl: 'https://www.youtube.com/embed/Ff5ikLm5BRI',
+      id: '5',
+      title: '20 Min Fat Burning HIIT Workout - Full body Cardio, No Equipment, No Repeat',
+      description: 'Efficient 20-minute HIIT session targeting full-body fat burning with no equipment required.',
+      category: 'hiit',
+      videoUrl: 'https://www.youtube.com/embed/-hSma-BRzoo',
       duration: '20 min',
       difficulty: 'intermediate'
     },
     {
-      id: '5',
-      title: 'Zumba Dance Fitness',
-      description: 'Fun and energetic dance workout that combines fitness with Latin rhythms.',
-      category: 'zumba',
-      videoUrl: 'https://www.youtube.com/embed/6S8TzUYzOac',
-      duration: '40 min',
-      difficulty: 'beginner'
-    },
-    {
       id: '6',
-      title: 'Morning Yoga Flow',
-      description: 'Gentle yoga sequence perfect for starting your day with mindfulness.',
-      category: 'yoga',
-      videoUrl: 'https://www.youtube.com/embed/VaoV1PrYft4',
-      duration: '35 min',
-      difficulty: 'beginner'
+      title: 'Get Abs In 60 Days (Using Science)',
+      description: 'Science-based approach to building strong abs and core strength in 60 days.',
+      category: 'core',
+      videoUrl: 'https://www.youtube.com/embed/Tn-XvYG9x7w',
+      duration: '25 min',
+      difficulty: 'intermediate'
     },
     {
       id: '7',
-      title: 'Advanced Dumbbell Training',
-      description: 'Challenging dumbbell exercises for experienced fitness enthusiasts.',
-      category: 'dumbbell',
-      videoUrl: 'https://www.youtube.com/embed/2HdnaDuMAb0',
+      title: '25 Minute Dance Workout At Home | Exercise To Lose Weight FAST | Zumba Class',
+      description: 'Fun and energetic 25-minute Zumba dance workout to help you lose weight while having fun.',
+      category: 'zumba',
+      videoUrl: 'https://www.youtube.com/embed/HlFwWrcqIYg',
+      duration: '25 min',
+      difficulty: 'beginner'
+    },
+    {
+      id: '8',
+      title: '50-min Exercises To Make Belly Cry HARD | Zumba Class',
+      description: 'Intense 50-minute Zumba workout specifically designed to target belly fat with high-energy moves.',
+      category: 'zumba',
+      videoUrl: 'https://www.youtube.com/embed/OCy7wPWcTBA',
       duration: '50 min',
       difficulty: 'advanced'
     },
     {
-      id: '8',
-      title: 'Power Yoga Challenge',
-      description: 'Dynamic yoga practice that builds strength, flexibility, and endurance.',
+      id: '9',
+      title: 'Belly Fat Workout + Full Body Exercise Video | Workout Video | Zumba Fitness',
+      description: 'Complete Zumba fitness routine combining belly fat targeting moves with full-body exercises.',
+      category: 'zumba',
+      videoUrl: 'https://www.youtube.com/embed/TzbaUd5j_jA',
+      duration: '40 min',
+      difficulty: 'intermediate'
+    },
+    {
+      id: '10',
+      title: 'वज़न घटाने के लिए योग | Yoga for WEIGHT LOSS | 30-minute yoga',
+      description: 'Traditional yoga practice specifically designed for weight loss in a 30-minute session.',
       category: 'yoga',
-      videoUrl: 'https://www.youtube.com/embed/bVKRFBJOcs4',
-      duration: '60 min',
-      difficulty: 'advanced'
+      videoUrl: 'https://www.youtube.com/embed/s6XgAhHNO2k',
+      duration: '30 min',
+      difficulty: 'beginner'
     }
   ];
 
   const categories = [
     { value: 'all', label: 'All Categories' },
-    { value: 'dumbbell', label: 'Dumbbell' },
-    { value: 'bodyweight', label: 'Bodyweight' },
-    { value: 'hiit', label: 'HIIT' },
-    { value: 'core', label: 'Core' },
+    { value: 'dumbbell', label: 'DB Workout' },
+    { value: 'bodyweight', label: 'Body Weight Workout' },
+    { value: 'hiit', label: 'HIIT Workout' },
+    { value: 'core', label: 'ABS Workout' },
     { value: 'zumba', label: 'Zumba' },
     { value: 'yoga', label: 'Yoga' }
   ];
@@ -131,6 +149,18 @@ const WorkoutsPage: React.FC = () => {
       yoga: 'from-indigo-500 to-indigo-600'
     };
     return colors[category as keyof typeof colors] || 'from-gray-500 to-gray-600';
+  };
+
+  const getCategoryDisplayName = (category: string) => {
+    const displayNames = {
+      dumbbell: 'DB Workout',
+      bodyweight: 'Body Weight Workout',
+      hiit: 'HIIT Workout',
+      core: 'ABS Workout',
+      zumba: 'Zumba',
+      yoga: 'Yoga'
+    };
+    return displayNames[category as keyof typeof displayNames] || category;
   };
 
   return (
@@ -237,17 +267,17 @@ const WorkoutsPage: React.FC = () => {
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
                 />
-                <div className={`absolute top-3 left-3 px-2 py-1 rounded-full text-xs font-medium bg-gradient-to-r ${getCategoryColor(workout.category)} text-white`}>
-                  {workout.category.charAt(0).toUpperCase() + workout.category.slice(1)}
+                <div className={`absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r ${getCategoryColor(workout.category)} text-white`}>
+                  {getCategoryDisplayName(workout.category)}
                 </div>
               </div>
 
               {/* Content */}
               <div className="p-6">
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
                   {workout.title}
                 </h3>
-                <p className="text-gray-600 mb-4 text-sm leading-relaxed">
+                <p className="text-gray-600 mb-4 text-sm leading-relaxed line-clamp-3">
                   {workout.description}
                 </p>
 
@@ -285,6 +315,24 @@ const WorkoutsPage: React.FC = () => {
             </p>
           </motion.div>
         )}
+
+        {/* Info Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="mt-16 bg-gradient-to-r from-blue-50 to-emerald-50 p-8 rounded-2xl"
+        >
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+              Professional Workout Collection
+            </h2>
+            <p className="text-gray-600 max-w-3xl mx-auto">
+              Our carefully curated workout library features professional trainers and proven exercise routines. 
+              Each video is selected to provide maximum effectiveness for different fitness levels and goals.
+            </p>
+          </div>
+        </motion.div>
       </div>
     </div>
   );
