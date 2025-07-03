@@ -23,7 +23,7 @@ export interface Client {
   status: 'active' | 'inactive' | 'yet-to-start' | 'completed';
   notes: string;
   healthIssues?: string[];
-  dietEndDate?: string;
+  dietEndDate?: string | null;
   weightEntries: WeightEntry[];
   comments: Comment[];
   routine?: string;

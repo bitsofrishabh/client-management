@@ -99,9 +99,9 @@ const CSVImport: React.FC<CSVImportProps> = ({ onImport, onClose }) => {
         status = 'yet-to-start';
       }
       
-      // Parse diet end date
-      let dietEndDate = '';
-      if (dietEnd && dietEnd !== '') {
+      // Parse diet end date - ensure null instead of empty string
+      let dietEndDate: string | null = null;
+      if (dietEnd && dietEnd.trim() !== '') {
         if (dietEnd.includes('July')) {
           const dayMatch = dietEnd.match(/(\d+)/);
           if (dayMatch) {
@@ -128,7 +128,7 @@ const CSVImport: React.FC<CSVImportProps> = ({ onImport, onClose }) => {
         status,
         notes: notes || '',
         healthIssues,
-        dietEndDate,
+        dietEndDate, // This will now be null instead of empty string
         routine: 'Imported from CSV - routine to be updated',
         healthSummary: 'Imported client - health summary to be updated',
         weightEntries,
