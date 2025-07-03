@@ -5,6 +5,13 @@ export interface User {
   isAdmin: boolean;
 }
 
+export interface Comment {
+  id: string;
+  text: string;
+  timestamp: string;
+  author: string;
+}
+
 export interface Client {
   id: string;
   name: string;
@@ -15,9 +22,12 @@ export interface Client {
   goalWeight?: number;
   status: 'active' | 'inactive' | 'yet-to-start' | 'completed';
   notes: string;
-  healthIssues?: string;
+  healthIssues?: string[];
   dietEndDate?: string;
   weightEntries: WeightEntry[];
+  comments: Comment[];
+  routine?: string;
+  healthSummary?: string;
 }
 
 export interface WeightEntry {

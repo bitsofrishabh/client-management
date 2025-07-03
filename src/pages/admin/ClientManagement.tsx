@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Search, Filter, Users, TrendingUp, Calendar, MoreVertical, Edit, Trash2, FileText, Upload, Grid, Table, X, Save, User, Mail, Target, Calendar as CalendarIcon, Activity, AlertCircle } from 'lucide-react';
-import { Client } from '../../types';
+import { Plus, Search, Users, TrendingUp, Calendar, Edit, Trash2, FileText, Grid, Table, X, Save, User, Mail, Target, Calendar as CalendarIcon, Activity, AlertCircle, MessageSquare, Send, TrendingDown, Weight, Clock } from 'lucide-react';
+import { Client, Comment } from '../../types';
 import { toast } from 'sonner';
 
 interface ClientFormData {
@@ -10,10 +10,12 @@ interface ClientFormData {
   startDate: string;
   startWeight: number;
   goalWeight: number;
-  healthIssues: string;
+  healthIssues: string[];
   dietEndDate: string;
   status: 'active' | 'inactive' | 'yet-to-start' | 'completed';
   notes: string;
+  routine: string;
+  healthSummary: string;
 }
 
 const ClientManagement: React.FC = () => {
@@ -28,8 +30,24 @@ const ClientManagement: React.FC = () => {
       goalWeight: 160,
       status: 'active',
       notes: 'Making excellent progress with consistency in workouts and nutrition.',
-      healthIssues: 'Mild hypertension',
+      healthIssues: ['Mild Hypertension', 'Lower Back Pain'],
       dietEndDate: '2024-06-15',
+      routine: 'Morning cardio 30 mins, Evening strength training 45 mins, 3x per week',
+      healthSummary: 'Blood pressure improving, back pain reduced significantly',
+      comments: [
+        {
+          id: '1',
+          text: 'Great progress this week! Keep up the good work.',
+          timestamp: '2024-02-20T10:30:00Z',
+          author: 'Coach'
+        },
+        {
+          id: '2',
+          text: 'Client mentioned feeling more energetic.',
+          timestamp: '2024-02-18T14:15:00Z',
+          author: 'Coach'
+        }
+      ],
       weightEntries: [
         { date: '2024-01-15', weight: 180 },
         { date: '2024-01-22', weight: 178 },
@@ -50,8 +68,18 @@ const ClientManagement: React.FC = () => {
       goalWeight: 130,
       status: 'active',
       notes: 'Focused on strength training and muscle building.',
-      healthIssues: 'None',
+      healthIssues: ['None'],
       dietEndDate: '2024-07-01',
+      routine: 'Strength training 4x per week, Yoga 2x per week',
+      healthSummary: 'Excellent overall health, building lean muscle mass',
+      comments: [
+        {
+          id: '3',
+          text: 'Strength gains are impressive this month.',
+          timestamp: '2024-02-22T09:00:00Z',
+          author: 'Coach'
+        }
+      ],
       weightEntries: [
         { date: '2024-02-01', weight: 140 },
         { date: '2024-02-08', weight: 139 },
@@ -69,8 +97,11 @@ const ClientManagement: React.FC = () => {
       goalWeight: 180,
       status: 'yet-to-start',
       notes: 'Scheduled to begin program next week.',
-      healthIssues: 'Diabetes Type 2',
+      healthIssues: ['Diabetes Type 2', 'High Cholesterol'],
       dietEndDate: '2024-08-01',
+      routine: 'Low-impact cardio, resistance training with modifications',
+      healthSummary: 'Managing diabetes well, cholesterol levels monitored',
+      comments: [],
       weightEntries: [
         { date: '2024-03-01', weight: 200 }
       ]
@@ -82,6 +113,9 @@ const ClientManagement: React.FC = () => {
   const [viewMode, setViewMode] = useState<'table' | 'grid' | 'calendar'>('table');
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [showClientModal, setShowClientModal] = useState(false);
+  const [newComment, setNewComment] = useState('');
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
@@ -91,10 +125,12 @@ const ClientManagement: React.FC = () => {
     startDate: '',
     startWeight: 0,
     goalWeight: 0,
-    healthIssues: '',
+    healthIssues: [],
     dietEndDate: '',
     status: 'yet-to-start',
-    notes: ''
+    notes: '',
+    routine: '',
+    healthSummary: ''
   });
 
   const statusOptions = [
@@ -125,13 +161,6 @@ const ClientManagement: React.FC = () => {
     }
   };
 
-  const calculateProgress = (client: Client) => {
-    if (!client.currentWeight || !client.goalWeight) return 0;
-    const totalLoss = client.startWeight - client.goalWeight;
-    const currentLoss = client.startWeight - client.currentWeight;
-    return Math.round((currentLoss / totalLoss) * 100);
-  };
-
   const calculateWeightLoss = (client: Client) => {
     if (!client.currentWeight) return 0;
     return client.startWeight - client.currentWeight;
@@ -144,273 +173,121 @@ const ClientManagement: React.FC = () => {
     }
   };
 
-  const handleSubmitForm = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (editingClient) {
-      // Update existing client
-      setClients(clients.map(client => 
-        client.id === editingClient.id 
-          ? { 
-              ...client, 
-              ...formData,
-              currentWeight: formData.startWeight,
-              weightEntries: [{ date: formData.startDate, weight: formData.startWeight }]
-            }
-          : client
-      ));
-      toast.success('Client updated successfully');
-      setEditingClient(null);
-    } else {
-      // Add new client
-      const newClient: Client = {
-        id: Date.now().toString(),
-        ...formData,
-        currentWeight: formData.startWeight,
-        weightEntries: [{ date: formData.startDate, weight: formData.startWeight }]
-      };
-      setClients([...clients, newClient]);
-      toast.success('Client added successfully');
-    }
-    
-    setShowAddForm(false);
-    setFormData({
-      name: '',
-      email: '',
-      startDate: '',
-      startWeight: 0,
-      goalWeight: 0,
-      healthIssues: '',
-      dietEndDate: '',
-      status: 'yet-to-start',
-      notes: ''
+  const handleClientNameClick = (client: Client) => {
+    setSelectedClient(client);
+    setShowClientModal(true);
+  };
+
+  const handleAddComment = () => {
+    if (!newComment.trim() || !selectedClient) return;
+
+    const comment: Comment = {
+      id: Date.now().toString(),
+      text: newComment.trim(),
+      timestamp: new Date().toISOString(),
+      author: 'Coach'
+    };
+
+    setClients(clients.map(client => 
+      client.id === selectedClient.id 
+        ? { ...client, comments: [comment, ...client.comments] }
+        : client
+    ));
+
+    setSelectedClient({
+      ...selectedClient,
+      comments: [comment, ...selectedClient.comments]
     });
+
+    setNewComment('');
+    toast.success('Comment added successfully');
   };
 
-  const handleEditClient = (client: Client) => {
-    setEditingClient(client);
-    setFormData({
-      name: client.name,
-      email: client.email,
-      startDate: client.startDate,
-      startWeight: client.startWeight,
-      goalWeight: client.goalWeight || 0,
-      healthIssues: client.healthIssues || '',
-      dietEndDate: client.dietEndDate || '',
-      status: client.status,
-      notes: client.notes
-    });
-    setShowAddForm(true);
+  const formatTimestamp = (timestamp: string) => {
+    return new Date(timestamp).toLocaleString();
   };
 
-  const getDaysInMonth = (month: number, year: number) => {
-    return new Date(year, month + 1, 0).getDate();
+  const getHealthIssueColor = (issue: string) => {
+    if (issue.toLowerCase() === 'none') return 'bg-green-100 text-green-800';
+    return 'bg-red-100 text-red-800';
   };
 
-  const getWeightForDate = (client: Client, date: string) => {
-    const entry = client.weightEntries.find(entry => entry.date === date);
-    return entry ? entry.weight : null;
-  };
+  const renderWeightChart = (client: Client) => {
+    const maxWeight = Math.max(...client.weightEntries.map(entry => entry.weight));
+    const minWeight = Math.min(...client.weightEntries.map(entry => entry.weight));
+    const range = maxWeight - minWeight || 1;
 
-  const updateWeight = (clientId: string, date: string, weight: number) => {
-    setClients(clients.map(client => {
-      if (client.id === clientId) {
-        const existingEntryIndex = client.weightEntries.findIndex(entry => entry.date === date);
-        let updatedEntries;
-        
-        if (existingEntryIndex >= 0) {
-          updatedEntries = [...client.weightEntries];
-          updatedEntries[existingEntryIndex] = { date, weight };
-        } else {
-          updatedEntries = [...client.weightEntries, { date, weight }];
-        }
-        
-        // Update current weight to the latest entry
-        const latestEntry = updatedEntries.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
-        
-        return {
-          ...client,
-          weightEntries: updatedEntries,
-          currentWeight: latestEntry.weight
-        };
-      }
-      return client;
-    }));
-    toast.success('Weight updated successfully');
-  };
-
-  const renderCalendarView = () => {
-    const daysInMonth = getDaysInMonth(selectedMonth, selectedYear);
-    const monthName = new Date(selectedYear, selectedMonth).toLocaleString('default', { month: 'long' });
-    
     return (
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xl font-semibold text-gray-900">
-              Weight Tracking Calendar - {monthName} {selectedYear}
-            </h3>
-            <div className="flex items-center space-x-4">
-              <select
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                {Array.from({ length: 12 }, (_, i) => (
-                  <option key={i} value={i}>
-                    {new Date(2024, i).toLocaleString('default', { month: 'long' })}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                {Array.from({ length: 5 }, (_, i) => (
-                  <option key={i} value={2024 + i}>
-                    {2024 + i}
-                  </option>
-                ))}
-              </select>
-            </div>
+      <div className="bg-gray-50 p-4 rounded-lg">
+        <h4 className="text-sm font-semibold text-gray-900 mb-4">Weight Progress Chart</h4>
+        <div className="relative h-40">
+          <svg className="w-full h-full" viewBox="0 0 400 160">
+            {/* Grid lines */}
+            {[0, 1, 2, 3, 4].map(i => (
+              <line
+                key={i}
+                x1="40"
+                y1={20 + i * 30}
+                x2="380"
+                y2={20 + i * 30}
+                stroke="#e5e7eb"
+                strokeWidth="1"
+              />
+            ))}
+            
+            {/* Weight line */}
+            <polyline
+              fill="none"
+              stroke="url(#gradient)"
+              strokeWidth="3"
+              points={client.weightEntries.map((entry, index) => {
+                const x = 40 + (index * (340 / (client.weightEntries.length - 1 || 1)));
+                const y = 140 - ((entry.weight - minWeight) / range) * 100;
+                return `${x},${y}`;
+              }).join(' ')}
+            />
+            
+            {/* Data points */}
+            {client.weightEntries.map((entry, index) => {
+              const x = 40 + (index * (340 / (client.weightEntries.length - 1 || 1)));
+              const y = 140 - ((entry.weight - minWeight) / range) * 100;
+              return (
+                <circle
+                  key={index}
+                  cx={x}
+                  cy={y}
+                  r="4"
+                  fill="#3b82f6"
+                  className="hover:r-6 transition-all"
+                />
+              );
+            })}
+            
+            {/* Gradient definition */}
+            <defs>
+              <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#3b82f6" />
+                <stop offset="100%" stopColor="#10b981" />
+              </linearGradient>
+            </defs>
+          </svg>
+          
+          {/* Y-axis labels */}
+          <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-xs text-gray-500 py-2">
+            <span>{maxWeight.toFixed(0)}</span>
+            <span>{((maxWeight + minWeight) / 2).toFixed(0)}</span>
+            <span>{minWeight.toFixed(0)}</span>
           </div>
         </div>
         
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-10">
-                  Client
-                </th>
-                {Array.from({ length: daysInMonth }, (_, i) => (
-                  <th key={i + 1} className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[60px]">
-                    {i + 1}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredClients.map((client) => (
-                <tr key={client.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 whitespace-nowrap sticky left-0 bg-white z-10 border-r border-gray-200">
-                    <div className="text-sm font-medium text-gray-900">{client.name}</div>
-                  </td>
-                  {Array.from({ length: daysInMonth }, (_, i) => {
-                    const day = i + 1;
-                    const dateStr = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                    const weight = getWeightForDate(client, dateStr);
-                    
-                    return (
-                      <td key={day} className="px-2 py-3 text-center">
-                        <input
-                          type="number"
-                          value={weight || ''}
-                          onChange={(e) => {
-                            const newWeight = parseFloat(e.target.value);
-                            if (!isNaN(newWeight) && newWeight > 0) {
-                              updateWeight(client.id, dateStr, newWeight);
-                            }
-                          }}
-                          className="w-14 px-1 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-center"
-                          placeholder="--"
-                          step="0.1"
-                          min="0"
-                        />
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        {/* X-axis labels */}
+        <div className="flex justify-between text-xs text-gray-500 mt-2 px-10">
+          <span>Start</span>
+          <span>Current</span>
         </div>
       </div>
     );
   };
-
-  const renderGridView = () => (
-    <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      {filteredClients.map((client, index) => (
-        <motion.div
-          key={client.id}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: index * 0.1 }}
-          className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-shadow duration-300"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div className="bg-gradient-to-r from-blue-600 to-emerald-600 p-3 rounded-full">
-              <User className="h-6 w-6 text-white" />
-            </div>
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => handleEditClient(client)}
-                className="text-blue-600 hover:text-blue-900 transition-colors"
-              >
-                <Edit className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => handleDeleteClient(client.id)}
-                className="text-red-600 hover:text-red-900 transition-colors"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-          
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">{client.name}</h3>
-          <p className="text-sm text-gray-600 mb-4">{client.email}</p>
-          
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Weight Lost:</span>
-              <span className="text-sm font-semibold text-green-600">
-                {calculateWeightLoss(client).toFixed(1)} lbs
-              </span>
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Health Issues:</span>
-              <span className="text-sm text-gray-900 truncate max-w-[120px]">
-                {client.healthIssues || 'None'}
-              </span>
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Diet End Date:</span>
-              <span className="text-sm text-gray-900">
-                {client.dietEndDate ? new Date(client.dietEndDate).toLocaleDateString() : 'N/A'}
-              </span>
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Status:</span>
-              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(client.status)}`}>
-                {client.status.replace('-', ' ')}
-              </span>
-            </div>
-            
-            {client.goalWeight && client.currentWeight && (
-              <div className="mt-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-gray-600">Progress:</span>
-                  <span className="text-sm font-semibold text-gray-900">{calculateProgress(client)}%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-gradient-to-r from-blue-600 to-emerald-600 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${Math.min(calculateProgress(client), 100)}%` }}
-                  ></div>
-                </div>
-              </div>
-            )}
-          </div>
-        </motion.div>
-      ))}
-    </div>
-  );
 
   const renderTableView = () => (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
@@ -419,12 +296,11 @@ const ClientManagement: React.FC = () => {
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
               <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
-              <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start Date</th>
               <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Weight Progress</th>
               <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Health Issues</th>
               <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Diet End Date</th>
               <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-              <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Progress</th>
+              <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Comments</th>
               <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
@@ -432,13 +308,14 @@ const ClientManagement: React.FC = () => {
             {filteredClients.map((client) => (
               <tr key={client.id} className="hover:bg-gray-50 transition-colors">
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div>
-                    <div className="text-sm font-medium text-gray-900">{client.name}</div>
-                    <div className="text-sm text-gray-500">{client.email}</div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {new Date(client.startDate).toLocaleDateString()}
+                  <button
+                    onClick={() => handleClientNameClick(client)}
+                    className="text-left hover:text-blue-600 transition-colors"
+                  >
+                    <div className="text-sm font-medium text-gray-900 hover:text-blue-600">
+                      {client.name}
+                    </div>
+                  </button>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   <div>
@@ -454,9 +331,16 @@ const ClientManagement: React.FC = () => {
                     )}
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  <div className="max-w-[150px] truncate">
-                    {client.healthIssues || 'None'}
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="flex flex-wrap gap-1 max-w-[200px]">
+                    {client.healthIssues?.map((issue, index) => (
+                      <span
+                        key={index}
+                        className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getHealthIssueColor(issue)}`}
+                      >
+                        {issue}
+                      </span>
+                    ))}
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -467,20 +351,11 @@ const ClientManagement: React.FC = () => {
                     {client.status.replace('-', ' ')}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {client.goalWeight && client.currentWeight ? (
-                    <div className="flex items-center">
-                      <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
-                        <div
-                          className="bg-gradient-to-r from-blue-600 to-emerald-600 h-2 rounded-full"
-                          style={{ width: `${Math.min(calculateProgress(client), 100)}%` }}
-                        ></div>
-                      </div>
-                      <span className="text-sm text-gray-600">{calculateProgress(client)}%</span>
-                    </div>
-                  ) : (
-                    <span className="text-sm text-gray-400">-</span>
-                  )}
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <div className="flex items-center space-x-1">
+                    <MessageSquare className="h-4 w-4" />
+                    <span>{client.comments?.length || 0}</span>
+                  </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                   <div className="flex items-center space-x-2">
@@ -506,6 +381,69 @@ const ClientManagement: React.FC = () => {
     </div>
   );
 
+  const handleSubmitForm = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (editingClient) {
+      setClients(clients.map(client => 
+        client.id === editingClient.id 
+          ? { 
+              ...client, 
+              ...formData,
+              currentWeight: formData.startWeight,
+              weightEntries: [{ date: formData.startDate, weight: formData.startWeight }],
+              comments: client.comments || []
+            }
+          : client
+      ));
+      toast.success('Client updated successfully');
+      setEditingClient(null);
+    } else {
+      const newClient: Client = {
+        id: Date.now().toString(),
+        ...formData,
+        currentWeight: formData.startWeight,
+        weightEntries: [{ date: formData.startDate, weight: formData.startWeight }],
+        comments: []
+      };
+      setClients([...clients, newClient]);
+      toast.success('Client added successfully');
+    }
+    
+    setShowAddForm(false);
+    setFormData({
+      name: '',
+      email: '',
+      startDate: '',
+      startWeight: 0,
+      goalWeight: 0,
+      healthIssues: [],
+      dietEndDate: '',
+      status: 'yet-to-start',
+      notes: '',
+      routine: '',
+      healthSummary: ''
+    });
+  };
+
+  const handleEditClient = (client: Client) => {
+    setEditingClient(client);
+    setFormData({
+      name: client.name,
+      email: client.email,
+      startDate: client.startDate,
+      startWeight: client.startWeight,
+      goalWeight: client.goalWeight || 0,
+      healthIssues: client.healthIssues || [],
+      dietEndDate: client.dietEndDate || '',
+      status: client.status,
+      notes: client.notes,
+      routine: client.routine || '',
+      healthSummary: client.healthSummary || ''
+    });
+    setShowAddForm(true);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-[95%] mx-auto px-4">
@@ -521,37 +459,6 @@ const ClientManagement: React.FC = () => {
             <p className="text-gray-600">Manage your fitness coaching clients and track their daily progress</p>
           </div>
           <div className="flex items-center space-x-3 mt-4 lg:mt-0">
-            {/* View Mode Toggles */}
-            <div className="flex items-center bg-white rounded-lg border border-gray-300 p-1">
-              <button
-                onClick={() => setViewMode('table')}
-                className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  viewMode === 'table' ? 'bg-blue-600 text-white' : 'text-gray-700 hover:text-blue-600'
-                }`}
-              >
-                <Table className="h-4 w-4" />
-                <span>Table</span>
-              </button>
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  viewMode === 'grid' ? 'bg-blue-600 text-white' : 'text-gray-700 hover:text-blue-600'
-                }`}
-              >
-                <Grid className="h-4 w-4" />
-                <span>Grid</span>
-              </button>
-              <button
-                onClick={() => setViewMode('calendar')}
-                className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  viewMode === 'calendar' ? 'bg-blue-600 text-white' : 'text-gray-700 hover:text-blue-600'
-                }`}
-              >
-                <CalendarIcon className="h-4 w-4" />
-                <span>Calendar</span>
-              </button>
-            </div>
-            
             <button
               onClick={() => setShowAddForm(true)}
               className="flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-emerald-600 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-shadow"
@@ -634,9 +541,7 @@ const ClientManagement: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.5 }}
         >
-          {viewMode === 'table' && renderTableView()}
-          {viewMode === 'grid' && renderGridView()}
-          {viewMode === 'calendar' && renderCalendarView()}
+          {renderTableView()}
         </motion.div>
 
         {/* No Results */}
@@ -656,6 +561,156 @@ const ClientManagement: React.FC = () => {
             </p>
           </motion.div>
         )}
+
+        {/* Client Profile Modal */}
+        <AnimatePresence>
+          {showClientModal && selectedClient && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+            >
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                className="bg-white rounded-2xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+              >
+                <div className="p-6 border-b border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <div className="bg-gradient-to-r from-blue-600 to-emerald-600 p-3 rounded-full">
+                        <User className="h-8 w-8 text-white" />
+                      </div>
+                      <div>
+                        <h2 className="text-2xl font-bold text-gray-900">{selectedClient.name}</h2>
+                        <p className="text-gray-600">{selectedClient.email}</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setShowClientModal(false)}
+                      className="text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      <X className="h-6 w-6" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="p-6 grid md:grid-cols-2 gap-6">
+                  {/* Left Column - Stats and Chart */}
+                  <div className="space-y-6">
+                    {/* Quick Stats */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-blue-50 p-4 rounded-lg">
+                        <div className="flex items-center space-x-2">
+                          <Weight className="h-5 w-5 text-blue-600" />
+                          <span className="text-sm font-medium text-blue-900">Weight Lost</span>
+                        </div>
+                        <p className="text-2xl font-bold text-blue-600 mt-1">
+                          {calculateWeightLoss(selectedClient).toFixed(1)} lbs
+                        </p>
+                      </div>
+                      <div className="bg-green-50 p-4 rounded-lg">
+                        <div className="flex items-center space-x-2">
+                          <Target className="h-5 w-5 text-green-600" />
+                          <span className="text-sm font-medium text-green-900">Goal Weight</span>
+                        </div>
+                        <p className="text-2xl font-bold text-green-600 mt-1">
+                          {selectedClient.goalWeight} lbs
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Weight Chart */}
+                    {renderWeightChart(selectedClient)}
+
+                    {/* Health Issues */}
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-900 mb-3">Health Issues</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedClient.healthIssues?.map((issue, index) => (
+                          <span
+                            key={index}
+                            className={`inline-flex px-3 py-1 text-sm font-medium rounded-full ${getHealthIssueColor(issue)}`}
+                          >
+                            {issue}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Routine */}
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-900 mb-2">Current Routine</h4>
+                      <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
+                        {selectedClient.routine || 'No routine specified'}
+                      </p>
+                    </div>
+
+                    {/* Health Summary */}
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-900 mb-2">Health Summary</h4>
+                      <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
+                        {selectedClient.healthSummary || 'No health summary available'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Right Column - Comments */}
+                  <div className="space-y-6">
+                    <div>
+                      <h4 className="text-lg font-semibold text-gray-900 mb-4">Comments & Notes</h4>
+                      
+                      {/* Add Comment */}
+                      <div className="mb-6">
+                        <div className="flex space-x-3">
+                          <textarea
+                            value={newComment}
+                            onChange={(e) => setNewComment(e.target.value)}
+                            placeholder="Add a comment or note..."
+                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                            rows={3}
+                          />
+                          <button
+                            onClick={handleAddComment}
+                            disabled={!newComment.trim()}
+                            className="px-4 py-2 bg-gradient-to-r from-blue-600 to-emerald-600 text-white rounded-lg hover:shadow-lg transition-shadow disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <Send className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Comments List */}
+                      <div className="space-y-4 max-h-96 overflow-y-auto">
+                        {selectedClient.comments?.length > 0 ? (
+                          selectedClient.comments.map((comment) => (
+                            <div key={comment.id} className="bg-gray-50 p-4 rounded-lg">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-sm font-medium text-gray-900">{comment.author}</span>
+                                <div className="flex items-center space-x-1 text-xs text-gray-500">
+                                  <Clock className="h-3 w-3" />
+                                  <span>{formatTimestamp(comment.timestamp)}</span>
+                                </div>
+                              </div>
+                              <p className="text-sm text-gray-700">{comment.text}</p>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-center py-8">
+                            <MessageSquare className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                            <p className="text-gray-500">No comments yet</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Add/Edit Client Modal */}
         <AnimatePresence>
@@ -687,10 +742,12 @@ const ClientManagement: React.FC = () => {
                           startDate: '',
                           startWeight: 0,
                           goalWeight: 0,
-                          healthIssues: '',
+                          healthIssues: [],
                           dietEndDate: '',
                           status: 'yet-to-start',
-                          notes: ''
+                          notes: '',
+                          routine: '',
+                          healthSummary: ''
                         });
                       }}
                       className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -795,14 +852,17 @@ const ClientManagement: React.FC = () => {
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         <AlertCircle className="h-4 w-4 inline mr-1" />
-                        Health Issues
+                        Health Issues (comma separated)
                       </label>
                       <input
                         type="text"
-                        value={formData.healthIssues}
-                        onChange={(e) => setFormData({ ...formData, healthIssues: e.target.value })}
+                        value={formData.healthIssues.join(', ')}
+                        onChange={(e) => setFormData({ 
+                          ...formData, 
+                          healthIssues: e.target.value.split(',').map(issue => issue.trim()).filter(issue => issue)
+                        })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="Any health concerns or conditions"
+                        placeholder="e.g., Diabetes, High Blood Pressure"
                       />
                     </div>
 
@@ -821,6 +881,32 @@ const ClientManagement: React.FC = () => {
                         <option value="completed">Completed</option>
                       </select>
                     </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Routine
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={formData.routine}
+                      onChange={(e) => setFormData({ ...formData, routine: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Describe the client's workout routine..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Health Summary
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={formData.healthSummary}
+                      onChange={(e) => setFormData({ ...formData, healthSummary: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Overall health status and notes..."
+                    />
                   </div>
 
                   <div>
@@ -848,10 +934,12 @@ const ClientManagement: React.FC = () => {
                           startDate: '',
                           startWeight: 0,
                           goalWeight: 0,
-                          healthIssues: '',
+                          healthIssues: [],
                           dietEndDate: '',
                           status: 'yet-to-start',
-                          notes: ''
+                          notes: '',
+                          routine: '',
+                          healthSummary: ''
                         });
                       }}
                       className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
