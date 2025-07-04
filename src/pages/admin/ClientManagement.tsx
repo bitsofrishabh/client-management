@@ -319,11 +319,11 @@ const ClientManagement: React.FC = () => {
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-900">
                   <div>
-                    <span className="font-medium">{client.startWeight} kg</span>
+                    <span className="font-medium">{client.startWeight} </span>
                     {client.currentWeight && (
                       <>
                         <span className="text-gray-500"> → </span>
-                        <span className="font-medium">{client.currentWeight} kg</span>
+                        <span className="font-medium">{client.currentWeight} </span>
                       </>
                     )}
                   </div>
