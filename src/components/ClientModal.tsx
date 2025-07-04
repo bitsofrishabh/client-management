@@ -167,11 +167,12 @@ const ClientModal: React.FC<ClientModalProps> = ({ client, onClose }) => {
     scales: {
       y: {
         beginAtZero: false,
+        reverse: true, // This makes the Y-axis go from top (high weight) to bottom (low weight)
         min: yAxisMin,
         max: yAxisMax,
         title: {
           display: true,
-          text: 'Weight (kg)'
+          text: 'Weight (kg) - Higher weights at top, lower weights at bottom'
         }
       },
       x: {
