@@ -148,17 +148,16 @@ const ClientModal: React.FC<ClientModalProps> = ({ client, onClose }) => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-      style={{ margin: '5%' }}
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex"
     >
       <motion.div
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
-        className="bg-white rounded-2xl shadow-xl w-full h-full overflow-y-auto"
+        className="bg-white w-full h-full flex flex-col"
       >
         {/* Header */}
-        <div className="sticky top-0 bg-white p-6 border-b border-gray-200 z-10">
+        <div className="flex-shrink-0 bg-white p-6 border-b border-gray-200">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold text-gray-900">{client.name}</h2>
@@ -173,8 +172,8 @@ const ClientModal: React.FC<ClientModalProps> = ({ client, onClose }) => {
           </div>
         </div>
 
-        {/* Content - Single View */}
-        <div className="p-6 space-y-8">
+        {/* Content - Scrollable */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-8">
           {/* Overview Section */}
           <div className="space-y-6">
             <h3 className="text-xl font-bold text-gray-900 flex items-center">
