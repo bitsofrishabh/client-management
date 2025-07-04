@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { X, Calendar, Weight, Target, MessageSquare, Plus, TrendingDown, TrendingUp, Activity, User, Heart, FileText, Ruler } from 'lucide-react';
+import { X, Calendar, Weight, Target, MessageSquare, Plus, TrendingDown, TrendingUp, Activity, User, Heart, FileText, Ruler, Filter } from 'lucide-react';
 import { Client } from '../types';
 import { Line } from 'react-chartjs-2';
 import { useAddComment, useAddWeightEntry } from '../hooks/useClients';
@@ -35,6 +35,7 @@ const ClientModal: React.FC<ClientModalProps> = ({ client, onClose }) => {
   const [newComment, setNewComment] = useState('');
   const [newWeight, setNewWeight] = useState('');
   const [newWeightDate, setNewWeightDate] = useState(new Date().toISOString().split('T')[0]);
+  const [chartTimeFilter, setChartTimeFilter] = useState('30'); // days
   
   const { user } = useAuth();
   const addCommentMutation = useAddComment();
@@ -83,20 +84,45 @@ const ClientModal: React.FC<ClientModalProps> = ({ client, onClose }) => {
     return (client.currentWeight / (heightInMeters * heightInMeters)).toFixed(1);
   };
 
-  // Prepare chart data with improved Y-axis starting point
-  const minWeight = Math.min(...client.weightEntries.map(e => e.weight), client.goalWeight || 0);
-  const maxWeight = Math.max(...client.weightEntries.map(e => e.weight), client.startWeight);
-  const yAxisMin = Math.max(0, client.startWeight - 25); // Start 25kg below start weight but not below 0
+  // Filter weight entries based on selected time period
+  const getFilteredWeightEntries = () => {
+    if (chartTimeFilter === 'all') {
+      return client.weightEntries;
+    }
+    
+    const days = parseInt(chartTimeFilter);
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - days);
+    
+    return client.weightEntries.filter(entry => {
+      const entryDate = new Date(entry.date);
+      return entryDate >= cutoffDate;
+    });
+  };
 
+  const filteredWeightEntries = getFilteredWeightEntries();
+
+  // Chart time filter options
+  const timeFilterOptions = [
+    { value: '7', label: 'Last 7 days' },
+    { value: '14', label: 'Last 14 days' },
+    { value: '30', label: 'Last 30 days' },
+    { value: '60', label: 'Last 2 months' },
+    { value: '90', label: 'Last 3 months' },
+    { value: '180', label: 'Last 6 months' },
+    { value: 'all', label: 'All time' }
+  ];
+
+  // Prepare chart data with start weight to goal weight Y-axis range
   const chartData = {
-    labels: client.weightEntries.map(entry => {
+    labels: filteredWeightEntries.map(entry => {
       const date = new Date(entry.date);
       return `${date.getDate()}/${date.getMonth() + 1}`;
     }),
     datasets: [
       {
         label: 'Weight (kg)',
-        data: client.weightEntries.map(entry => entry.weight),
+        data: filteredWeightEntries.map(entry => entry.weight),
         borderColor: 'rgb(59, 130, 246)',
         backgroundColor: 'rgba(59, 130, 246, 0.1)',
         tension: 0.4,
@@ -104,14 +130,28 @@ const ClientModal: React.FC<ClientModalProps> = ({ client, onClose }) => {
       },
       {
         label: 'Goal Weight',
-        data: Array(client.weightEntries.length).fill(client.goalWeight),
+        data: Array(filteredWeightEntries.length).fill(client.goalWeight),
         borderColor: 'rgb(34, 197, 94)',
         backgroundColor: 'transparent',
         borderDash: [5, 5],
         pointRadius: 0,
+      },
+      {
+        label: 'Start Weight',
+        data: Array(filteredWeightEntries.length).fill(client.startWeight),
+        borderColor: 'rgb(156, 163, 175)',
+        backgroundColor: 'transparent',
+        borderDash: [10, 5],
+        pointRadius: 0,
       }
     ],
   };
+
+  // Calculate Y-axis range from start weight to goal weight with some padding
+  const weightRange = Math.abs(client.startWeight - (client.goalWeight || client.startWeight));
+  const padding = Math.max(5, weightRange * 0.1); // 10% padding or minimum 5kg
+  const yAxisMin = Math.min(client.startWeight, client.goalWeight || client.startWeight) - padding;
+  const yAxisMax = Math.max(client.startWeight, client.goalWeight || client.startWeight) + padding;
 
   const chartOptions = {
     responsive: true,
@@ -121,14 +161,14 @@ const ClientModal: React.FC<ClientModalProps> = ({ client, onClose }) => {
       },
       title: {
         display: true,
-        text: 'Weight Progress Over Time',
+        text: `Weight Progress Over Time (${timeFilterOptions.find(opt => opt.value === chartTimeFilter)?.label})`,
       },
     },
     scales: {
       y: {
         beginAtZero: false,
         min: yAxisMin,
-        max: maxWeight + 5,
+        max: yAxisMax,
         title: {
           display: true,
           text: 'Weight (kg)'
@@ -317,12 +357,28 @@ const ClientModal: React.FC<ClientModalProps> = ({ client, onClose }) => {
             
             {/* Weight Chart */}
             <div className="bg-white border border-gray-200 rounded-xl p-6">
-              <h4 className="text-lg font-semibold text-gray-900 mb-4">Weight Progress Chart</h4>
-              {client.weightEntries.length > 0 ? (
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-lg font-semibold text-gray-900">Weight Progress Chart</h4>
+                <div className="flex items-center space-x-2">
+                  <Filter className="h-4 w-4 text-gray-500" />
+                  <select
+                    value={chartTimeFilter}
+                    onChange={(e) => setChartTimeFilter(e.target.value)}
+                    className="text-sm border border-gray-300 rounded-lg px-3 py-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    {timeFilterOptions.map(option => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              {filteredWeightEntries.length > 0 ? (
                 <Line data={chartData} options={chartOptions} />
               ) : (
                 <div className="text-center py-8 text-gray-500">
-                  No weight data available
+                  No weight data available for the selected time period
                 </div>
               )}
             </div>
@@ -360,10 +416,30 @@ const ClientModal: React.FC<ClientModalProps> = ({ client, onClose }) => {
             <div className="bg-white border border-gray-200 rounded-xl p-6">
               <h4 className="text-lg font-semibold text-gray-900 mb-4">Weight History</h4>
               <div className="space-y-2 max-h-64 overflow-y-auto">
-                {client.weightEntries.map((entry, index) => (
+                {client.weightEntries
+                  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                  .map((entry, index) => (
                   <div key={index} className="flex justify-between items-center py-2 border-b border-gray-100">
                     <span className="text-gray-600">{new Date(entry.date).toLocaleDateString()}</span>
-                    <span className="font-medium text-gray-900">{entry.weight} kg</span>
+                    <div className="flex items-center space-x-2">
+                      <span className="font-medium text-gray-900">{entry.weight} kg</span>
+                      {index < client.weightEntries.length - 1 && (
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          entry.weight < client.weightEntries[client.weightEntries.length - 1 - index - 1]?.weight
+                            ? 'bg-green-100 text-green-800'
+                            : entry.weight > client.weightEntries[client.weightEntries.length - 1 - index - 1]?.weight
+                            ? 'bg-red-100 text-red-800'
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {entry.weight < client.weightEntries[client.weightEntries.length - 1 - index - 1]?.weight
+                            ? '↓'
+                            : entry.weight > client.weightEntries[client.weightEntries.length - 1 - index - 1]?.weight
+                            ? '↑'
+                            : '→'
+                          }
+                        </span>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
