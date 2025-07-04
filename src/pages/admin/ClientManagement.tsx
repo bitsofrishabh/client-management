@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Search, Filter, Users, TrendingUp, Calendar, Edit, Trash2, FileText, Upload, Eye, Table, CalendarDays, Save, X } from 'lucide-react';
+import { Plus, Search, Filter, Users, TrendingUp, Calendar, Edit, Trash2, FileText, Upload, Eye, Table, CalendarDays, Save, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Client } from '../../types';
 import { toast } from 'sonner';
 import CSVImport from '../../components/CSVImport';
@@ -25,6 +25,10 @@ const ClientManagement: React.FC = () => {
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [editingCell, setEditingCell] = useState<EditingCell | null>(null);
+  
+  // Calendar state
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
   // Use React Query hooks for data management
   const { data: clients = [], isLoading, error } = useClients();
@@ -45,6 +49,11 @@ const ClientManagement: React.FC = () => {
     { value: 'calendar' as ViewType, label: 'Calendar View', icon: CalendarDays }
   ];
 
+  const monthNames = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+
   const filteredClients = useMemo(() => {
     return clients.filter(client => {
       const matchesSearch = client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -54,6 +63,117 @@ const ClientManagement: React.FC = () => {
       return matchesSearch && matchesStatus;
     });
   }, [clients, searchTerm, statusFilter]);
+
+  // Helper function to get weight for a specific client on a specific date
+  const getWeightForDate = (client: Client, day: number) => {
+    const dateString = `${selectedYear}-${(selectedMonth + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+    const weightEntry = client.weightEntries.find(entry => entry.date === dateString);
+    return weightEntry ? weightEntry.weight : null;
+  };
+
+  // Helper function to get weight trend color based on the algorithm
+  const getWeightTrendColor = (client: Client, day: number) => {
+    const currentDate = new Date(selectedYear, selectedMonth, day);
+    const currentWeight = getWeightForDate(client, day);
+    
+    if (!currentWeight) return '';
+
+    // Get weights for the last 7 days including current day
+    const last7Days = [];
+    for (let i = 6; i >= 0; i--) {
+      const checkDate = new Date(currentDate);
+      checkDate.setDate(currentDate.getDate() - i);
+      
+      if (checkDate.getMonth() === selectedMonth && checkDate.getFullYear() === selectedYear) {
+        const weight = getWeightForDate(client, checkDate.getDate());
+        if (weight) {
+          last7Days.push({ date: checkDate.getDate(), weight });
+        }
+      }
+    }
+
+    if (last7Days.length < 2) return '';
+
+    // Get weights for the last 4 days including current day
+    const last4Days = last7Days.slice(-4);
+    
+    // Check if weight is same or increased for last 4 days
+    if (last4Days.length >= 4) {
+      const isStagnantOrIncreasing = last4Days.every((entry, index) => {
+        if (index === 0) return true;
+        return entry.weight >= last4Days[index - 1].weight;
+      });
+      
+      if (isStagnantOrIncreasing) {
+        return 'bg-yellow-200 text-yellow-800 border-yellow-300';
+      }
+    }
+
+    // Check if weight difference in last 7 days is 0
+    const minWeight = Math.min(...last7Days.map(d => d.weight));
+    const maxWeight = Math.max(...last7Days.map(d => d.weight));
+    const weightDifference = maxWeight - minWeight;
+    
+    if (weightDifference === 0) {
+      return 'bg-red-200 text-red-800 border-red-300';
+    }
+
+    // Check if weight is same and didn't come down in last 7 days
+    if (last7Days.length >= 7) {
+      const firstWeight = last7Days[0].weight;
+      const lastWeight = last7Days[last7Days.length - 1].weight;
+      
+      if (lastWeight >= firstWeight) {
+        return 'bg-red-200 text-red-800 border-red-300';
+      }
+    }
+
+    // Check if weight is going down with little bit of up and down (overall downward trend)
+    if (last7Days.length >= 3) {
+      const firstWeight = last7Days[0].weight;
+      const lastWeight = last7Days[last7Days.length - 1].weight;
+      
+      if (lastWeight < firstWeight) {
+        // Check for overall downward trend despite some fluctuations
+        let downwardTrend = 0;
+        let upwardTrend = 0;
+        
+        for (let i = 1; i < last7Days.length; i++) {
+          if (last7Days[i].weight < last7Days[i - 1].weight) {
+            downwardTrend++;
+          } else if (last7Days[i].weight > last7Days[i - 1].weight) {
+            upwardTrend++;
+          }
+        }
+        
+        if (downwardTrend >= upwardTrend) {
+          return 'bg-green-200 text-green-800 border-green-300';
+        }
+      }
+    }
+
+    return '';
+  };
+
+  // Calculate weight lost from start date to current date
+  const calculateWeightLoss = (client: Client) => {
+    if (!client.currentWeight) return 0;
+    return client.startWeight - client.currentWeight;
+  };
+
+  // Get current weight for the selected month (latest weight entry in that month)
+  const getCurrentWeightForMonth = (client: Client) => {
+    const monthEntries = client.weightEntries.filter(entry => {
+      const entryDate = new Date(entry.date);
+      return entryDate.getMonth() === selectedMonth && entryDate.getFullYear() === selectedYear;
+    });
+    
+    if (monthEntries.length === 0) return client.currentWeight;
+    
+    // Sort by date and get the latest entry
+    monthEntries.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    return monthEntries[0].weight;
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -104,10 +224,7 @@ const ClientManagement: React.FC = () => {
       return;
     }
 
-    const today = new Date();
-    const currentMonth = today.getMonth();
-    const currentYear = today.getFullYear();
-    const dateString = `${currentYear}-${(currentMonth + 1).toString().padStart(2, '0')}-${editingCell.day.toString().padStart(2, '0')}`;
+    const dateString = `${selectedYear}-${(selectedMonth + 1).toString().padStart(2, '0')}-${editingCell.day.toString().padStart(2, '0')}`;
 
     try {
       await addWeightMutation.mutateAsync({
@@ -116,8 +233,10 @@ const ClientManagement: React.FC = () => {
         weight: weight
       });
       setEditingCell(null);
+      toast.success('Weight entry saved successfully!');
     } catch (error) {
       console.error('Error saving weight:', error);
+      toast.error('Failed to save weight entry');
     }
   };
 
@@ -131,6 +250,37 @@ const ClientManagement: React.FC = () => {
     } else if (e.key === 'Escape') {
       handleCellCancel();
     }
+  };
+
+  const handlePreviousMonth = () => {
+    if (selectedMonth === 0) {
+      setSelectedMonth(11);
+      setSelectedYear(selectedYear - 1);
+    } else {
+      setSelectedMonth(selectedMonth - 1);
+    }
+  };
+
+  const handleNextMonth = () => {
+    if (selectedMonth === 11) {
+      setSelectedMonth(0);
+      setSelectedYear(selectedYear + 1);
+    } else {
+      setSelectedMonth(selectedMonth + 1);
+    }
+  };
+
+  // Check if date is today
+  const isToday = (day: number) => {
+    const today = new Date();
+    return day === today.getDate() && selectedMonth === today.getMonth() && selectedYear === today.getFullYear();
+  };
+
+  // Check if client should start tracking from this date
+  const shouldShowWeight = (client: Client, day: number) => {
+    const startDate = new Date(client.startDate);
+    const currentDate = new Date(selectedYear, selectedMonth, day);
+    return currentDate >= startDate;
   };
 
   // Render Table View
@@ -243,34 +393,13 @@ const ClientManagement: React.FC = () => {
 
   // Render Calendar View (Excel-like table)
   const renderCalendarView = () => {
-    const today = new Date();
-    const currentMonth = today.getMonth();
-    const currentYear = today.getFullYear();
-    
     // Get first day of month and number of days
-    const firstDay = new Date(currentYear, currentMonth, 1);
-    const lastDay = new Date(currentYear, currentMonth + 1, 0);
+    const firstDay = new Date(selectedYear, selectedMonth, 1);
+    const lastDay = new Date(selectedYear, selectedMonth + 1, 0);
     const daysInMonth = lastDay.getDate();
-
-    const monthNames = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
-    ];
 
     // Create array of days for the month
     const daysArray = Array.from({ length: daysInMonth }, (_, i) => i + 1);
-    
-    // Helper function to get weight for a specific client on a specific date
-    const getWeightForDate = (client: Client, day: number) => {
-      const dateString = `${currentYear}-${(currentMonth + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-      const weightEntry = client.weightEntries.find(entry => entry.date === dateString);
-      return weightEntry ? weightEntry.weight : null;
-    };
-    
-    // Helper function to check if date is today
-    const isToday = (day: number) => {
-      return day === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear();
-    };
 
     return (
       <motion.div
@@ -279,18 +408,40 @@ const ClientManagement: React.FC = () => {
         transition={{ duration: 0.6, delay: 0.5 }}
         className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6"
       >
-        {/* Calendar Header */}
+        {/* Calendar Header with Month Navigation */}
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-2xl font-bold text-gray-900">
-            {monthNames[currentMonth]} {currentYear} - Weight Tracking
-          </h3>
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={handlePreviousMonth}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <ChevronLeft className="h-5 w-5 text-gray-600" />
+            </button>
+            <h3 className="text-2xl font-bold text-gray-900">
+              {monthNames[selectedMonth]} {selectedYear} - Weight Tracking
+            </h3>
+            <button
+              onClick={handleNextMonth}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <ChevronRight className="h-5 w-5 text-gray-600" />
+            </button>
+          </div>
           <div className="flex items-center space-x-4 text-sm">
             <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              <span>Weight Recorded</span>
+              <div className="w-3 h-3 bg-green-200 border border-green-300 rounded"></div>
+              <span>Losing Weight</span>
             </div>
             <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+              <div className="w-3 h-3 bg-yellow-200 border border-yellow-300 rounded"></div>
+              <span>Stagnant (4 days)</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 bg-red-200 border border-red-300 rounded"></div>
+              <span>No Progress (7 days)</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 bg-blue-100 border border-blue-300 rounded"></div>
               <span>Today</span>
             </div>
             <div className="text-xs text-gray-500">
@@ -307,6 +458,9 @@ const ClientManagement: React.FC = () => {
                 <th className="text-left p-3 font-semibold text-gray-900 sticky left-0 bg-gray-50 border-r border-gray-200 min-w-[200px] z-10">
                   Client Name
                 </th>
+                <th className="text-center p-3 font-semibold text-gray-900 border-r border-gray-200 min-w-[100px] bg-blue-50">
+                  Weight Lost (kg)
+                </th>
                 {daysArray.map(day => (
                   <th 
                     key={day} 
@@ -316,7 +470,7 @@ const ClientManagement: React.FC = () => {
                   >
                     <div className="font-bold">{day}</div>
                     <div className="text-xs text-gray-400 mt-1">
-                      {new Date(currentYear, currentMonth, day).toLocaleDateString('en', { weekday: 'short' })}
+                      {new Date(selectedYear, selectedMonth, day).toLocaleDateString('en', { weekday: 'short' })}
                     </div>
                   </th>
                 ))}
@@ -338,14 +492,27 @@ const ClientManagement: React.FC = () => {
                       >
                         <div className="font-medium text-gray-900">{client.name}</div>
                         <div className="text-sm text-gray-500">
-                          Goal: {client.goalWeight} kg | Current: {client.currentWeight} kg
+                          Start: {client.startWeight} kg | Goal: {client.goalWeight} kg
+                        </div>
+                        <div className="text-xs text-gray-400">
+                          Started: {new Date(client.startDate).toLocaleDateString()}
                         </div>
                       </div>
+                    </div>
+                  </td>
+                  <td className="p-3 text-center border-r border-gray-200 bg-blue-50">
+                    <div className="font-bold text-lg text-blue-900">
+                      {calculateWeightLoss(client).toFixed(1)}
+                    </div>
+                    <div className="text-xs text-blue-600">
+                      {calculateWeightLoss(client) > 0 ? 'Lost' : calculateWeightLoss(client) < 0 ? 'Gained' : 'Same'}
                     </div>
                   </td>
                   {daysArray.map(day => {
                     const weight = getWeightForDate(client, day);
                     const isEditingThisCell = editingCell?.clientId === client.id && editingCell?.day === day;
+                    const trendColor = getWeightTrendColor(client, day);
+                    const showWeight = shouldShowWeight(client, day);
                     
                     return (
                       <td 
@@ -353,9 +520,13 @@ const ClientManagement: React.FC = () => {
                         className={`text-center p-1 text-xs border-r border-gray-100 ${
                           isToday(day) ? 'bg-blue-50 border-blue-200' : ''
                         }`}
-                        onDoubleClick={() => handleCellDoubleClick(client.id, day, weight)}
+                        onDoubleClick={() => showWeight && handleCellDoubleClick(client.id, day, weight)}
                       >
-                        {isEditingThisCell ? (
+                        {!showWeight ? (
+                          <div className="text-gray-300 px-2 py-1">
+                            -
+                          </div>
+                        ) : isEditingThisCell ? (
                           <div className="flex items-center space-x-1">
                             <input
                               type="number"
@@ -382,7 +553,9 @@ const ClientManagement: React.FC = () => {
                             </button>
                           </div>
                         ) : weight ? (
-                          <div className="bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium cursor-pointer hover:bg-green-200 transition-colors">
+                          <div className={`px-2 py-1 rounded-full font-medium cursor-pointer hover:opacity-80 transition-all border ${
+                            trendColor || 'bg-gray-100 text-gray-800 border-gray-300'
+                          }`}>
                             {weight} kg
                           </div>
                         ) : (
@@ -400,7 +573,7 @@ const ClientManagement: React.FC = () => {
         </div>
 
         {/* Summary Stats */}
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="bg-blue-50 p-4 rounded-lg">
             <div className="text-sm font-medium text-blue-600">Total Clients</div>
             <div className="text-2xl font-bold text-blue-900">{filteredClients.length}</div>
@@ -411,7 +584,7 @@ const ClientManagement: React.FC = () => {
               {filteredClients.reduce((total, client) => {
                 return total + client.weightEntries.filter(entry => {
                   const entryDate = new Date(entry.date);
-                  return entryDate.getMonth() === currentMonth && entryDate.getFullYear() === currentYear;
+                  return entryDate.getMonth() === selectedMonth && entryDate.getFullYear() === selectedYear;
                 }).length;
               }, 0)}
             </div>
@@ -420,6 +593,35 @@ const ClientManagement: React.FC = () => {
             <div className="text-sm font-medium text-orange-600">Active Clients</div>
             <div className="text-2xl font-bold text-orange-900">
               {filteredClients.filter(client => client.status === 'active').length}
+            </div>
+          </div>
+          <div className="bg-purple-50 p-4 rounded-lg">
+            <div className="text-sm font-medium text-purple-600">Total Weight Lost</div>
+            <div className="text-2xl font-bold text-purple-900">
+              {filteredClients.reduce((total, client) => total + calculateWeightLoss(client), 0).toFixed(1)} kg
+            </div>
+          </div>
+        </div>
+
+        {/* Legend */}
+        <div className="mt-6 bg-gray-50 p-4 rounded-lg">
+          <h4 className="text-sm font-semibold text-gray-900 mb-3">Weight Tracking Algorithm:</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs text-gray-600">
+            <div className="flex items-center space-x-2">
+              <div className="w-4 h-4 bg-green-200 border border-green-300 rounded"></div>
+              <span>Green: Weight going down with fluctuations (overall downward trend)</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-4 h-4 bg-yellow-200 border border-yellow-300 rounded"></div>
+              <span>Yellow: Weight same or increased for last 4 days</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-4 h-4 bg-red-200 border border-red-300 rounded"></div>
+              <span>Red: No weight change in 7 days OR weight didn't decrease in 7 days</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-4 h-4 bg-gray-100 border border-gray-300 rounded"></div>
+              <span>Gray: Normal weight entry</span>
             </div>
           </div>
         </div>
@@ -576,6 +778,7 @@ const ClientManagement: React.FC = () => {
         >
           <p className="text-gray-600">
             Showing {filteredClients.length} client{filteredClients.length !== 1 ? 's' : ''} in {currentView} view
+            {currentView === 'calendar' && ` for ${monthNames[selectedMonth]} ${selectedYear}`}
           </p>
         </motion.div>
 
