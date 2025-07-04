@@ -86,7 +86,7 @@ const ClientModal: React.FC<ClientModalProps> = ({ client, onClose }) => {
   // Prepare chart data with improved Y-axis starting point
   const minWeight = Math.min(...client.weightEntries.map(e => e.weight), client.goalWeight || 0);
   const maxWeight = Math.max(...client.weightEntries.map(e => e.weight), client.startWeight);
-  const yAxisMin = Math.max(0, minWeight - 15); // Start 15kg below minimum weight but not below 0
+  const yAxisMin = Math.max(0, client.startWeight - 25); // Start 25kg below start weight but not below 0
 
   const chartData = {
     labels: client.weightEntries.map(entry => {
@@ -148,13 +148,13 @@ const ClientModal: React.FC<ClientModalProps> = ({ client, onClose }) => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex"
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
     >
       <motion.div
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
-        className="bg-white w-full h-full flex flex-col"
+        className="bg-white w-[80%] h-[80%] flex flex-col rounded-2xl shadow-xl overflow-hidden"
       >
         {/* Header */}
         <div className="flex-shrink-0 bg-white p-6 border-b border-gray-200">
