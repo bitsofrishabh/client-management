@@ -295,40 +295,26 @@ const ClientManagement: React.FC = () => {
     const daysInMonth = lastDay.getDate();
     const startingDayOfWeek = firstDay.getDay();
 
-    // Create calendar grid
-    const calendarDays = [];
-    
-    // Add empty cells for days before month starts
-    for (let i = 0; i < startingDayOfWeek; i++) {
-      calendarDays.push(null);
-    }
-    
-    // Add days of the month
-    for (let day = 1; day <= daysInMonth; day++) {
-      const date = new Date(currentYear, currentMonth, day);
-      const dateString = date.toISOString().split('T')[0];
-      
-      // Find clients with activities on this date
-      const dayClients = filteredClients.filter(client => {
-        return client.startDate === dateString || 
-               client.dietEndDate === dateString ||
-               client.weightEntries.some(entry => entry.date === dateString);
-      });
-      
-      calendarDays.push({
-        day,
-        date: dateString,
-        clients: dayClients,
-        isToday: day === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear()
-      });
-    }
 
     const monthNames = [
       'January', 'February', 'March', 'April', 'May', 'June',
       'July', 'August', 'September', 'October', 'November', 'December'
     ];
 
-    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    // Create array of days for the month
+    const daysArray = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+    
+    // Helper function to get weight for a specific client on a specific date
+    const getWeightForDate = (client: Client, day: number) => {
+      const dateString = `${currentYear}-${(currentMonth + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+      const weightEntry = client.weightEntries.find(entry => entry.date === dateString);
+      return weightEntry ? weightEntry.weight : null;
+    };
+    
+    // Helper function to check if date is today
+    const isToday = (day: number) => {
+      return day === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear();
+    };
 
     return (
       <motion.div
@@ -344,76 +330,110 @@ const ClientManagement: React.FC = () => {
           </h3>
           <div className="flex items-center space-x-4 text-sm">
             <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-              <span>Start Date</span>
-            </div>
-            <div className="flex items-center space-x-2">
               <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              <span>Weight Entry</span>
+              <span>Weight Recorded</span>
             </div>
             <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-              <span>Diet End</span>
+              <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+              <span>Today</span>
             </div>
           </div>
         </div>
 
-        {/* Day Headers */}
-        <div className="grid grid-cols-7 gap-1 mb-2">
-          {dayNames.map(day => (
-            <div key={day} className="p-2 text-center text-sm font-medium text-gray-500">
-              {day}
-            </div>
-          ))}
+        {/* Weight Tracking Table */}
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="border-b-2 border-gray-200">
+                <th className="text-left p-3 font-semibold text-gray-900 sticky left-0 bg-white border-r border-gray-200 min-w-[200px]">
+                  Client Name
+                </th>
+                {daysArray.map(day => (
+                  <th 
+                    key={day} 
+                    className={`text-center p-2 font-medium text-xs min-w-[60px] ${
+                      isToday(day) ? 'bg-blue-50 text-blue-700 border-x border-blue-200' : 'text-gray-600'
+                    }`}
+                  >
+                    <div>{day}</div>
+                    <div className="text-xs text-gray-400">
+                      {new Date(currentYear, currentMonth, day).toLocaleDateString('en', { weekday: 'short' })}
+                    </div>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {filteredClients.map((client, clientIndex) => (
+                <tr 
+                  key={client.id} 
+                  className={`border-b border-gray-100 hover:bg-gray-50 ${
+                    clientIndex % 2 === 0 ? 'bg-white' : 'bg-gray-25'
+                  }`}
+                >
+                  <td className="p-3 sticky left-0 bg-inherit border-r border-gray-200">
+                    <div className="flex items-center space-x-3">
+                      <div 
+                        className="cursor-pointer hover:text-blue-600 transition-colors"
+                        onClick={() => handleClientClick(client)}
+                      >
+                        <div className="font-medium text-gray-900">{client.name}</div>
+                        <div className="text-sm text-gray-500">
+                          Goal: {client.goalWeight} kg | Current: {client.currentWeight} kg
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  {daysArray.map(day => {
+                    const weight = getWeightForDate(client, day);
+                    const dateString = `${currentYear}-${(currentMonth + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+                    
+                    return (
+                      <td 
+                        key={day} 
+                        className={`text-center p-1 text-xs ${
+                          isToday(day) ? 'bg-blue-50 border-x border-blue-200' : ''
+                        }`}
+                      >
+                        {weight ? (
+                          <div className="bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium">
+                            {weight} kg
+                          </div>
+                        ) : (
+                          <div className="text-gray-300">-</div>
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
 
-        {/* Calendar Grid */}
-        <div className="grid grid-cols-7 gap-1">
-          {calendarDays.map((dayData, index) => (
-            <div
-              key={index}
-              className={`min-h-[100px] p-2 border border-gray-100 ${
-                dayData?.isToday ? 'bg-blue-50 border-blue-200' : 'bg-white'
-              } ${dayData ? 'hover:bg-gray-50' : ''}`}
-            >
-              {dayData && (
-                <>
-                  <div className={`text-sm font-medium mb-1 ${
-                    dayData.isToday ? 'text-blue-600' : 'text-gray-900'
-                  }`}>
-                    {dayData.day}
-                  </div>
-                  <div className="space-y-1">
-                    {dayData.clients.map(client => {
-                      const hasStartDate = client.startDate === dayData.date;
-                      const hasDietEnd = client.dietEndDate === dayData.date;
-                      const hasWeightEntry = client.weightEntries.some(entry => entry.date === dayData.date);
-                      
-                      return (
-                        <div
-                          key={client.id}
-                          className={`text-xs p-1 rounded cursor-pointer truncate ${
-                            hasStartDate ? 'bg-blue-100 text-blue-800' :
-                            hasDietEnd ? 'bg-red-100 text-red-800' :
-                            hasWeightEntry ? 'bg-green-100 text-green-800' :
-                            'bg-gray-100 text-gray-800'
-                          }`}
-                          onClick={() => handleClientClick(client)}
-                          title={`${client.name} - ${
-                            hasStartDate ? 'Start Date' :
-                            hasDietEnd ? 'Diet End' :
-                            hasWeightEntry ? 'Weight Entry' : 'Activity'
-                          }`}
-                        >
-                          {client.name}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </>
-              )}
+        {/* Summary Stats */}
+        <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-blue-50 p-4 rounded-lg">
+            <div className="text-sm font-medium text-blue-600">Total Clients</div>
+            <div className="text-2xl font-bold text-blue-900">{filteredClients.length}</div>
+          </div>
+          <div className="bg-green-50 p-4 rounded-lg">
+            <div className="text-sm font-medium text-green-600">Weight Entries This Month</div>
+            <div className="text-2xl font-bold text-green-900">
+              {filteredClients.reduce((total, client) => {
+                return total + client.weightEntries.filter(entry => {
+                  const entryDate = new Date(entry.date);
+                  return entryDate.getMonth() === currentMonth && entryDate.getFullYear() === currentYear;
+                }).length;
+              }, 0)}
             </div>
-          ))}
+          </div>
+          <div className="bg-orange-50 p-4 rounded-lg">
+            <div className="text-sm font-medium text-orange-600">Active Clients</div>
+            <div className="text-2xl font-bold text-orange-900">
+              {filteredClients.filter(client => client.status === 'active').length}
+            </div>
+          </div>
         </div>
       </motion.div>
     );
