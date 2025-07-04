@@ -1,14 +1,20 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Search, Filter, Users, TrendingUp, Calendar, Edit, Trash2, FileText, Upload, Eye, Grid3X3, Table, CalendarDays } from 'lucide-react';
+import { Plus, Search, Filter, Users, TrendingUp, Calendar, Edit, Trash2, FileText, Upload, Eye, Table, CalendarDays, Save, X } from 'lucide-react';
 import { Client } from '../../types';
 import { toast } from 'sonner';
 import CSVImport from '../../components/CSVImport';
 import ClientModal from '../../components/ClientModal';
 import ClientEditModal from '../../components/ClientEditModal';
-import { useClients, useCreateClients, useDeleteClient } from '../../hooks/useClients';
+import { useClients, useCreateClients, useDeleteClient, useAddWeightEntry } from '../../hooks/useClients';
 
-type ViewType = 'table' | 'grid' | 'calendar';
+type ViewType = 'table' | 'calendar';
+
+interface EditingCell {
+  clientId: string;
+  day: number;
+  value: string;
+}
 
 const ClientManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -18,11 +24,13 @@ const ClientManagement: React.FC = () => {
   const [showCSVImport, setShowCSVImport] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [editingCell, setEditingCell] = useState<EditingCell | null>(null);
 
   // Use React Query hooks for data management
   const { data: clients = [], isLoading, error } = useClients();
   const createClientsMutation = useCreateClients();
   const deleteClientMutation = useDeleteClient();
+  const addWeightMutation = useAddWeightEntry();
 
   const statusOptions = [
     { value: 'all', label: 'All Status' },
@@ -34,7 +42,6 @@ const ClientManagement: React.FC = () => {
 
   const viewOptions = [
     { value: 'table' as ViewType, label: 'Table View', icon: Table },
-    { value: 'grid' as ViewType, label: 'Grid View', icon: Grid3X3 },
     { value: 'calendar' as ViewType, label: 'Calendar View', icon: CalendarDays }
   ];
 
@@ -78,6 +85,52 @@ const ClientManagement: React.FC = () => {
 
   const handleClientClick = (client: Client) => {
     setSelectedClient(client);
+  };
+
+  const handleCellDoubleClick = (clientId: string, day: number, currentWeight: number | null) => {
+    setEditingCell({
+      clientId,
+      day,
+      value: currentWeight ? currentWeight.toString() : ''
+    });
+  };
+
+  const handleCellSave = async () => {
+    if (!editingCell) return;
+
+    const weight = parseFloat(editingCell.value);
+    if (isNaN(weight) || weight <= 0) {
+      toast.error('Please enter a valid weight');
+      return;
+    }
+
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+    const dateString = `${currentYear}-${(currentMonth + 1).toString().padStart(2, '0')}-${editingCell.day.toString().padStart(2, '0')}`;
+
+    try {
+      await addWeightMutation.mutateAsync({
+        clientId: editingCell.clientId,
+        date: dateString,
+        weight: weight
+      });
+      setEditingCell(null);
+    } catch (error) {
+      console.error('Error saving weight:', error);
+    }
+  };
+
+  const handleCellCancel = () => {
+    setEditingCell(null);
+  };
+
+  const handleCellKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleCellSave();
+    } else if (e.key === 'Escape') {
+      handleCellCancel();
+    }
   };
 
   // Render Table View
@@ -188,102 +241,7 @@ const ClientManagement: React.FC = () => {
     </motion.div>
   );
 
-  // Render Grid View
-  const renderGridView = () => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, delay: 0.5 }}
-      className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-    >
-      {filteredClients.map((client, index) => (
-        <motion.div
-          key={client.id}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: index * 0.1 }}
-          className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-shadow duration-300 cursor-pointer"
-          onClick={() => handleClientClick(client)}
-        >
-          {/* Client Header */}
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold text-gray-900 truncate">{client.name}</h3>
-              <p className="text-sm text-gray-500 truncate">{client.email}</p>
-            </div>
-            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(client.status)}`}>
-              {client.status.replace('-', ' ')}
-            </span>
-          </div>
-
-          {/* Weight Progress */}
-          <div className="mb-4">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-sm font-medium text-gray-600">Weight Progress</span>
-              <span className="text-sm text-gray-900">{calculateProgress(client)}%</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div
-                className="bg-gradient-to-r from-blue-600 to-emerald-600 h-2 rounded-full"
-                style={{ width: `${Math.min(calculateProgress(client), 100)}%` }}
-              ></div>
-            </div>
-            <div className="flex justify-between text-xs text-gray-500 mt-1">
-              <span>{client.startWeight} kg</span>
-              <span>{client.currentWeight} kg</span>
-              <span>{client.goalWeight} kg</span>
-            </div>
-          </div>
-
-          {/* Health Issues */}
-          <div className="mb-4">
-            <span className="text-sm font-medium text-gray-600 block mb-2">Health Issues</span>
-            <div className="flex flex-wrap gap-1">
-              {client.healthIssues?.slice(0, 3).map((issue, idx) => (
-                <span
-                  key={idx}
-                  className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                    issue.toLowerCase() === 'none' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                  }`}
-                >
-                  {issue}
-                </span>
-              ))}
-              {(client.healthIssues?.length || 0) > 3 && (
-                <span className="text-xs text-gray-500">+{(client.healthIssues?.length || 0) - 3}</span>
-              )}
-            </div>
-          </div>
-
-          {/* Actions */}
-          <div className="flex justify-end space-x-2 pt-4 border-t border-gray-100">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setEditingClient(client);
-              }}
-              className="text-blue-600 hover:text-blue-900 transition-colors"
-              title="Edit Client"
-            >
-              <Edit className="h-4 w-4" />
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDeleteClient(client.id);
-              }}
-              className="text-red-600 hover:text-red-900 transition-colors"
-              title="Delete Client"
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
-          </div>
-        </motion.div>
-      ))}
-    </motion.div>
-  );
-
-  // Render Calendar View
+  // Render Calendar View (Excel-like table)
   const renderCalendarView = () => {
     const today = new Date();
     const currentMonth = today.getMonth();
@@ -293,8 +251,6 @@ const ClientManagement: React.FC = () => {
     const firstDay = new Date(currentYear, currentMonth, 1);
     const lastDay = new Date(currentYear, currentMonth + 1, 0);
     const daysInMonth = lastDay.getDate();
-    const startingDayOfWeek = firstDay.getDay();
-
 
     const monthNames = [
       'January', 'February', 'March', 'April', 'May', 'June',
@@ -326,7 +282,7 @@ const ClientManagement: React.FC = () => {
         {/* Calendar Header */}
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-2xl font-bold text-gray-900">
-            {monthNames[currentMonth]} {currentYear}
+            {monthNames[currentMonth]} {currentYear} - Weight Tracking
           </h3>
           <div className="flex items-center space-x-4 text-sm">
             <div className="flex items-center space-x-2">
@@ -337,26 +293,29 @@ const ClientManagement: React.FC = () => {
               <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
               <span>Today</span>
             </div>
+            <div className="text-xs text-gray-500">
+              Double-click cells to edit weights
+            </div>
           </div>
         </div>
 
         {/* Weight Tracking Table */}
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto border border-gray-200 rounded-lg">
           <table className="w-full border-collapse">
             <thead>
-              <tr className="border-b-2 border-gray-200">
-                <th className="text-left p-3 font-semibold text-gray-900 sticky left-0 bg-white border-r border-gray-200 min-w-[200px]">
+              <tr className="border-b-2 border-gray-200 bg-gray-50">
+                <th className="text-left p-3 font-semibold text-gray-900 sticky left-0 bg-gray-50 border-r border-gray-200 min-w-[200px] z-10">
                   Client Name
                 </th>
                 {daysArray.map(day => (
                   <th 
                     key={day} 
-                    className={`text-center p-2 font-medium text-xs min-w-[60px] ${
-                      isToday(day) ? 'bg-blue-50 text-blue-700 border-x border-blue-200' : 'text-gray-600'
+                    className={`text-center p-2 font-medium text-xs min-w-[70px] border-r border-gray-100 ${
+                      isToday(day) ? 'bg-blue-100 text-blue-700 border-blue-300' : 'text-gray-600'
                     }`}
                   >
-                    <div>{day}</div>
-                    <div className="text-xs text-gray-400">
+                    <div className="font-bold">{day}</div>
+                    <div className="text-xs text-gray-400 mt-1">
                       {new Date(currentYear, currentMonth, day).toLocaleDateString('en', { weekday: 'short' })}
                     </div>
                   </th>
@@ -371,7 +330,7 @@ const ClientManagement: React.FC = () => {
                     clientIndex % 2 === 0 ? 'bg-white' : 'bg-gray-25'
                   }`}
                 >
-                  <td className="p-3 sticky left-0 bg-inherit border-r border-gray-200">
+                  <td className="p-3 sticky left-0 bg-inherit border-r border-gray-200 z-10">
                     <div className="flex items-center space-x-3">
                       <div 
                         className="cursor-pointer hover:text-blue-600 transition-colors"
@@ -386,21 +345,50 @@ const ClientManagement: React.FC = () => {
                   </td>
                   {daysArray.map(day => {
                     const weight = getWeightForDate(client, day);
-                    const dateString = `${currentYear}-${(currentMonth + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+                    const isEditingThisCell = editingCell?.clientId === client.id && editingCell?.day === day;
                     
                     return (
                       <td 
                         key={day} 
-                        className={`text-center p-1 text-xs ${
-                          isToday(day) ? 'bg-blue-50 border-x border-blue-200' : ''
+                        className={`text-center p-1 text-xs border-r border-gray-100 ${
+                          isToday(day) ? 'bg-blue-50 border-blue-200' : ''
                         }`}
+                        onDoubleClick={() => handleCellDoubleClick(client.id, day, weight)}
                       >
-                        {weight ? (
-                          <div className="bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium">
+                        {isEditingThisCell ? (
+                          <div className="flex items-center space-x-1">
+                            <input
+                              type="number"
+                              step="0.1"
+                              value={editingCell.value}
+                              onChange={(e) => setEditingCell({ ...editingCell, value: e.target.value })}
+                              onKeyDown={handleCellKeyPress}
+                              className="w-16 px-1 py-1 text-xs border border-blue-500 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                              autoFocus
+                            />
+                            <button
+                              onClick={handleCellSave}
+                              className="text-green-600 hover:text-green-800"
+                              title="Save"
+                            >
+                              <Save className="h-3 w-3" />
+                            </button>
+                            <button
+                              onClick={handleCellCancel}
+                              className="text-red-600 hover:text-red-800"
+                              title="Cancel"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </div>
+                        ) : weight ? (
+                          <div className="bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium cursor-pointer hover:bg-green-200 transition-colors">
                             {weight} kg
                           </div>
                         ) : (
-                          <div className="text-gray-300">-</div>
+                          <div className="text-gray-300 cursor-pointer hover:bg-gray-100 px-2 py-1 rounded transition-colors">
+                            -
+                          </div>
                         )}
                       </td>
                     );
@@ -593,7 +581,6 @@ const ClientManagement: React.FC = () => {
 
         {/* Dynamic View Rendering */}
         {currentView === 'table' && renderTableView()}
-        {currentView === 'grid' && renderGridView()}
         {currentView === 'calendar' && renderCalendarView()}
 
         {/* No Results */}
