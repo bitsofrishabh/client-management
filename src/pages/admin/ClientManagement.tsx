@@ -319,11 +319,11 @@ const ClientManagement: React.FC = () => {
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-900">
                   <div>
-                    <span className="font-medium">{client.startWeight} </span>
+                    <span className="font-medium">{client.startWeight} kg</span>
                     {client.currentWeight && (
                       <>
                         <span className="text-gray-500"> → </span>
-                        <span className="font-medium">{client.currentWeight} </span>
+                        <span className="font-medium">{client.currentWeight} kg</span>
                       </>
                     )}
                   </div>
@@ -556,7 +556,7 @@ const ClientManagement: React.FC = () => {
                           <div className={`px-2 py-1 rounded-full font-medium cursor-pointer hover:opacity-80 transition-all border ${
                             trendColor || 'bg-gray-100 text-gray-800 border-gray-300'
                           }`}>
-                            {weight} kg
+                            {weight}
                           </div>
                         ) : (
                           <div className="text-gray-300 cursor-pointer hover:bg-gray-100 px-2 py-1 rounded transition-colors">
