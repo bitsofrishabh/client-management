@@ -358,6 +358,7 @@ export const useUpdateWeightEntry = () => {
           date,
           weight
         });
+      }
 
       if (error) {
         throw new Error(error.message);
