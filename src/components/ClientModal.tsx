@@ -195,7 +195,6 @@ const ClientModal: React.FC<ClientModalProps> = ({ client, onClose }) => {
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
-        className="bg-white w-[80%] h-[80%] flex flex-col rounded-2xl shadow-xl overflow-hidden"
       >
         {/* Header */}
         <div className="flex-shrink-0 bg-white p-6 border-b border-gray-200">

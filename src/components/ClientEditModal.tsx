@@ -150,6 +150,7 @@ const ClientEditModal: React.FC<ClientEditModalProps> = ({ client, onClose }) =>
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
         className="bg-white rounded-2xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-2xl shadow-xl w-[90%] h-[90%] overflow-y-auto"
       >
         {/* Header */}
         <div className="p-6 border-b border-gray-200">
