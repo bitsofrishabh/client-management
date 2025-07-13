@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import CSVImport from '../../components/CSVImport';
 import ClientModal from '../../components/ClientModal';
 import ClientEditModal from '../../components/ClientEditModal';
-import { useClients, useCreateClients, useDeleteClient, useAddWeightEntry } from '../../hooks/useClients';
+import { useClients, useCreateClients, useDeleteClient, useUpdateWeightEntry } from '../../hooks/useClients';
 
 type ViewType = 'table' | 'calendar';
 
@@ -34,7 +34,7 @@ const ClientManagement: React.FC = () => {
   const { data: clients = [], isLoading, error } = useClients();
   const createClientsMutation = useCreateClients();
   const deleteClientMutation = useDeleteClient();
-  const addWeightMutation = useAddWeightEntry();
+  const updateWeightMutation = useUpdateWeightEntry();
 
   const statusOptions = [
     { value: 'all', label: 'All Status' },
@@ -227,16 +227,14 @@ const ClientManagement: React.FC = () => {
     const dateString = `${selectedYear}-${(selectedMonth + 1).toString().padStart(2, '0')}-${editingCell.day.toString().padStart(2, '0')}`;
 
     try {
-      await addWeightMutation.mutateAsync({
+      await updateWeightMutation.mutateAsync({
         clientId: editingCell.clientId,
         date: dateString,
         weight: weight
       });
       setEditingCell(null);
-      toast.success('Weight entry saved successfully!');
     } catch (error) {
       console.error('Error saving weight:', error);
-      toast.error('Failed to save weight entry');
     }
   };
 

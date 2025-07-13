@@ -269,7 +269,89 @@ export const useAddWeightEntry = () => {
 
   return useMutation(
     async ({ clientId, date, weight }: { clientId: string; date: string; weight: number }) => {
-      const { error } = await supabase
+      // First, check if a weight entry already exists for this date
+      const { data: existingEntry } = await supabase
+        .from('weight_entries')
+        .select('id')
+        .eq('client_id', clientId)
+        .eq('date', date)
+        .single();
+
+      if (existingEntry) {
+        // Update existing entry
+        const { error } = await supabase
+          .from('weight_entries')
+          .update({ weight })
+          .eq('client_id', clientId)
+          .eq('date', date);
+
+        if (error) {
+          throw new Error(error.message);
+        }
+      } else {
+        // Insert new entry
+        const { error } = await supabase
+          .from('weight_entries')
+          .insert({
+            client_id: clientId,
+            date,
+            weight
+          });
+
+        if (error) {
+          throw new Error(error.message);
+        }
+      }
+
+      // Update current weight in clients table
+      const { error: updateError } = await supabase
+        .from('clients')
+        .update({ current_weight: weight })
+        .eq('id', clientId);
+
+      if (updateError) {
+        throw new Error(updateError.message);
+      }
+    },
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries('clients');
+        toast.success('Weight entry saved successfully!');
+      },
+      onError: (error: Error) => {
+        toast.error(`Failed to save weight entry: ${error.message}`);
+      }
+    }
+  );
+};
+
+// Add or update weight entry (for calendar view editing)
+export const useUpdateWeightEntry = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation(
+    async ({ clientId, date, weight }: { clientId: string; date: string; weight: number }) => {
+      // First, check if a weight entry already exists for this date
+      const { data: existingEntry } = await supabase
+        .from('weight_entries')
+        .select('id')
+        .eq('client_id', clientId)
+        .eq('date', date)
+        .single();
+
+      if (existingEntry) {
+        // Update existing entry
+        const { error } = await supabase
+          .from('weight_entries')
+          .update({ weight })
+          .eq('id', existingEntry.id);
+
+        if (error) {
+          throw new Error(error.message);
+        }
+      } else {
+        // Insert new entry
+        const { error } = await supabase
         .from('weight_entries')
         .insert({
           client_id: clientId,
@@ -294,10 +376,10 @@ export const useAddWeightEntry = () => {
     {
       onSuccess: () => {
         queryClient.invalidateQueries('clients');
-        toast.success('Weight entry added successfully!');
+        toast.success('Weight entry updated successfully!');
       },
       onError: (error: Error) => {
-        toast.error(`Failed to add weight entry: ${error.message}`);
+        toast.error(`Failed to update weight entry: ${error.message}`);
       }
     }
   );
