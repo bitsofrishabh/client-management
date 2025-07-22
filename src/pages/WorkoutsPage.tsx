@@ -99,6 +99,285 @@ const WorkoutsPage: React.FC = () => {
       videoUrl: 'https://www.youtube.com/embed/s6XgAhHNO2k',
       duration: '30 min',
       difficulty: 'beginner'
+    },
+    {
+      id: '11',
+      title: 'Burn Calories Exercise Video | Hard Workout Video | Zumba Fitness With Unique Beats',
+      description: 'High-energy Zumba workout with unique beats designed to burn maximum calories.',
+      category: 'zumba',
+      videoUrl: 'https://www.youtube.com/embed/cXq7dap9Z_c',
+      duration: '45 min',
+      difficulty: 'intermediate'
+    },
+    {
+      id: '12',
+      title: 'COMPLETE 20 MIN ABS WORKOUT (From Home)',
+      description: 'Complete 20-minute abs workout that can be done from home with no equipment needed.',
+      category: 'core',
+      videoUrl: 'https://www.youtube.com/embed/8PwoytUU06g',
+      duration: '20 min',
+      difficulty: 'intermediate'
+    },
+    {
+      id: '13',
+      title: '30 Min FAT BURN | No Equipment | Rowan Row',
+      description: 'Intense 30-minute fat burning workout with no equipment required.',
+      category: 'hiit',
+      videoUrl: 'https://www.youtube.com/embed/OV8mGUgH4QA',
+      duration: '30 min',
+      difficulty: 'intermediate'
+    },
+    {
+      id: '14',
+      title: '30 Minute FULL BODY WORKOUT | No Equipment | Rowan Row',
+      description: 'Complete full-body workout routine that requires no equipment and targets all muscle groups.',
+      category: 'bodyweight',
+      videoUrl: 'https://www.youtube.com/embed/UUXG2oV9yts',
+      duration: '30 min',
+      difficulty: 'intermediate'
+    },
+    {
+      id: '15',
+      title: '20 Minute Complete ABS WORKOUT | Rowan Row',
+      description: 'Comprehensive 20-minute abs workout targeting all core muscles.',
+      category: 'core',
+      videoUrl: 'https://www.youtube.com/embed/5Ici1mxdX_4',
+      duration: '20 min',
+      difficulty: 'intermediate'
+    },
+    {
+      id: '16',
+      title: '20 MIN FULL BODY WORKOUT AT HOME HIIT (Fat Burn & No Equipment)',
+      description: 'High-intensity 20-minute full body HIIT workout for maximum fat burn.',
+      category: 'hiit',
+      videoUrl: 'https://www.youtube.com/embed/0Grvq1Kz6L8',
+      duration: '20 min',
+      difficulty: 'advanced'
+    },
+    {
+      id: '17',
+      title: '20 Min Fat Burning HIIT Workout - Full body Cardio, No Equipment',
+      description: 'Efficient 20-minute HIIT workout focusing on full-body cardio and fat burning.',
+      category: 'hiit',
+      videoUrl: 'https://www.youtube.com/embed/ixwz1uv3UhI',
+      duration: '20 min',
+      difficulty: 'intermediate'
+    },
+    {
+      id: '18',
+      title: 'Nonstop Dance Workout 2025 | Bollywood Dance Workout',
+      description: 'Fun Bollywood dance workout to lose weight fast at home with continuous movement.',
+      category: 'zumba',
+      videoUrl: 'https://www.youtube.com/embed/IR0ejm2KRbc',
+      duration: '40 min',
+      difficulty: 'beginner'
+    },
+    {
+      id: '19',
+      title: '30-Minute HIIT Cardio Workout with Warm Up - No Equipment at Home',
+      description: 'Complete 30-minute HIIT cardio session with warm-up, no equipment needed.',
+      category: 'hiit',
+      videoUrl: 'https://www.youtube.com/embed/ml6cT4AZdqI',
+      duration: '30 min',
+      difficulty: 'intermediate'
+    },
+    {
+      id: '20',
+      title: '30 MIN MORNING PILATES || Energising Full Body Workout (Moderate)',
+      description: 'Energizing morning Pilates routine for full-body strength and flexibility.',
+      category: 'yoga',
+      videoUrl: 'https://www.youtube.com/embed/LbG1ovCGp-E',
+      duration: '30 min',
+      difficulty: 'intermediate'
+    },
+    {
+      id: '21',
+      title: '20 MINUTE | TABATA WORKOUT | Full Body | One Dumbbell',
+      description: 'High-intensity Tabata workout using just one dumbbell for full-body conditioning.',
+      category: 'dumbbell',
+      videoUrl: 'https://www.youtube.com/embed/YcUQNI9xKWk',
+      duration: '20 min',
+      difficulty: 'advanced'
+    },
+    {
+      id: '22',
+      title: '30-Minute STRONG by Zumba® Cardio and Full-Body Toning Workout',
+      description: 'STRONG by Zumba workout combining cardio and full-body toning exercises.',
+      category: 'zumba',
+      videoUrl: 'https://www.youtube.com/embed/QRZcZgSgSHI',
+      duration: '30 min',
+      difficulty: 'advanced'
+    },
+    {
+      id: '23',
+      title: '[Favourite] Level 4 - Killer Home Cardio!',
+      description: 'Advanced level 4 killer cardio workout designed for maximum intensity.',
+      category: 'hiit',
+      videoUrl: 'https://www.youtube.com/embed/A5CWlen5N2I',
+      duration: '35 min',
+      difficulty: 'advanced'
+    },
+    {
+      id: '24',
+      title: 'Strength & Conditioning Full Body Workout | 50 Min No Equipment',
+      description: 'Comprehensive 50-minute strength and conditioning workout requiring no equipment.',
+      category: 'bodyweight',
+      videoUrl: 'https://www.youtube.com/embed/zCtlydVR3DQ',
+      duration: '50 min',
+      difficulty: 'advanced'
+    },
+    {
+      id: '25',
+      title: '30 Mins HIIT Cardio Workout | High Intensity Workout',
+      description: 'High-intensity 30-minute HIIT cardio workout for maximum calorie burn.',
+      category: 'hiit',
+      videoUrl: 'https://www.youtube.com/embed/4aSJvLMTZAY',
+      duration: '30 min',
+      difficulty: 'advanced'
+    },
+    {
+      id: '26',
+      title: '30-Min HEAT Cardio Workout for Fat Burn & Strength',
+      description: 'Intense HEAT cardio workout combining fat burn and strength training.',
+      category: 'hiit',
+      videoUrl: 'https://www.youtube.com/embed/Rp1v0WJGNiI',
+      duration: '30 min',
+      difficulty: 'advanced'
+    },
+    {
+      id: '27',
+      title: 'Full Body Cardio Workout at Home | Burn Calories Fast',
+      description: 'Fast-paced full body cardio workout to burn calories quickly at home.',
+      category: 'hiit',
+      videoUrl: 'https://www.youtube.com/embed/kMKrbt4OS_E',
+      duration: '25 min',
+      difficulty: 'intermediate'
+    },
+    {
+      id: '28',
+      title: 'Full Body HIIT Workout for Core Strength & Fat Loss',
+      description: 'HIIT workout targeting core strength and fat loss with no equipment needed.',
+      category: 'hiit',
+      videoUrl: 'https://www.youtube.com/embed/JpD2obRNKxk',
+      duration: '30 min',
+      difficulty: 'intermediate'
+    },
+    {
+      id: '29',
+      title: '30 Minute Full Body HIIT Workout | No Equipment Needed',
+      description: 'Complete 30-minute full body HIIT workout to burn fat fast.',
+      category: 'hiit',
+      videoUrl: 'https://www.youtube.com/embed/zUcen7B4DvA',
+      duration: '30 min',
+      difficulty: 'intermediate'
+    },
+    {
+      id: '30',
+      title: '50 Min Upper Body Dumbbell Workout at Home',
+      description: 'Comprehensive 50-minute upper body strength training with dumbbells.',
+      category: 'dumbbell',
+      videoUrl: 'https://www.youtube.com/embed/zUK56JWjbPw',
+      duration: '50 min',
+      difficulty: 'advanced'
+    },
+    {
+      id: '31',
+      title: 'Beginner Vinyasa Yoga | 50-Min Home Yoga for Strength & Flexibility',
+      description: 'Beginner-friendly Vinyasa yoga session for building strength and flexibility.',
+      category: 'yoga',
+      videoUrl: 'https://www.youtube.com/embed/1V9CXW9llZY',
+      duration: '50 min',
+      difficulty: 'beginner'
+    },
+    {
+      id: '32',
+      title: '30-Min HEAT Cardio Workout | Strength & Cardio Burn Exercises',
+      description: 'HEAT cardio workout combining strength and cardio burn exercises.',
+      category: 'hiit',
+      videoUrl: 'https://www.youtube.com/embed/1G4x48WZV7c',
+      duration: '30 min',
+      difficulty: 'advanced'
+    },
+    {
+      id: '33',
+      title: 'LOSE BELLY FAT IN 7 DAYS Challenge',
+      description: '7-day belly fat challenge workout to lose belly fat in one week at home.',
+      category: 'core',
+      videoUrl: 'https://www.youtube.com/embed/digpucxFbMo',
+      duration: '25 min',
+      difficulty: 'intermediate'
+    },
+    {
+      id: '34',
+      title: '30 MIN CALORIE KILLER HIIT Workout - Full body Cardio',
+      description: 'Calorie-killing 30-minute HIIT workout with full body cardio movements.',
+      category: 'hiit',
+      videoUrl: 'https://www.youtube.com/embed/jpizoUy4K9s',
+      duration: '30 min',
+      difficulty: 'advanced'
+    },
+    {
+      id: '35',
+      title: 'Walking Exercise with the SUPER Coaches! | Walk at Home',
+      description: 'Low-impact walking exercise routine that can be done at home.',
+      category: 'bodyweight',
+      videoUrl: 'https://www.youtube.com/embed/AdqrTg_hpEQ',
+      duration: '30 min',
+      difficulty: 'beginner'
+    },
+    {
+      id: '36',
+      title: '30 Minute Full Body Cardio HIIT Workout (With Modifications)',
+      description: 'Full body cardio HIIT workout with modifications for different fitness levels.',
+      category: 'hiit',
+      videoUrl: 'https://www.youtube.com/embed/Okpb-ZX8a_k',
+      duration: '30 min',
+      difficulty: 'intermediate'
+    },
+    {
+      id: '37',
+      title: 'Burn 1000 Calories with this 45 MIN CARDIO HIIT Workout',
+      description: 'Intense 45-minute cardio HIIT workout designed to burn 1000 calories.',
+      category: 'hiit',
+      videoUrl: 'https://www.youtube.com/embed/yVUcHEOr450',
+      duration: '45 min',
+      difficulty: 'advanced'
+    },
+    {
+      id: '38',
+      title: 'The Ultimate 45 Min FULL BODY WORKOUT | Rowan Row',
+      description: 'Ultimate 45-minute full body workout covering all major muscle groups.',
+      category: 'bodyweight',
+      videoUrl: 'https://www.youtube.com/embed/cDq-nFmD0rI',
+      duration: '45 min',
+      difficulty: 'advanced'
+    },
+    {
+      id: '39',
+      title: 'Belly Fat Workout + Full Body Exercise Video | Zumba Fitness',
+      description: 'Zumba fitness routine targeting belly fat with full body exercises.',
+      category: 'zumba',
+      videoUrl: 'https://www.youtube.com/embed/TzbaUd5j_jA',
+      duration: '35 min',
+      difficulty: 'intermediate'
+    },
+    {
+      id: '40',
+      title: '15 MIN SWEATY HIIT Workout - No Equipment, No Repeat',
+      description: 'Quick 15-minute sweaty HIIT workout with no equipment and no repeated exercises.',
+      category: 'hiit',
+      videoUrl: 'https://www.youtube.com/embed/_3hoz1zATys',
+      duration: '15 min',
+      difficulty: 'intermediate'
+    },
+    {
+      id: '41',
+      title: 'Yoga for Weight Loss & Belly Fat, Complete Beginners Fat Burning Workout',
+      description: 'Beginner-friendly yoga routine specifically designed for weight loss and belly fat reduction.',
+      category: 'yoga',
+      videoUrl: 'https://www.youtube.com/embed/WmSIMpIDa_A',
+      duration: '40 min',
+      difficulty: 'beginner'
     }
   ];
 
