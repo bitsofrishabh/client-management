@@ -7,6 +7,8 @@ const WorkoutsPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(12); // Show 12 videos per page for better mobile performance
 
   // Updated workout data with your specific videos
   const workouts: Workout[] = [
@@ -607,6 +609,17 @@ const WorkoutsPage: React.FC = () => {
     });
   }, [searchTerm, selectedCategory, selectedDifficulty, workouts]);
 
+  // Pagination logic
+  const totalPages = Math.ceil(filteredWorkouts.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentWorkouts = filteredWorkouts.slice(startIndex, endIndex);
+
+  // Reset to first page when filters change
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedCategory, selectedDifficulty]);
+
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case 'beginner': return 'text-green-600 bg-green-100';
@@ -736,13 +749,13 @@ const WorkoutsPage: React.FC = () => {
           className="mb-6"
         >
           <p className="text-gray-600">
-            Showing {filteredWorkouts.length} workout{filteredWorkouts.length !== 1 ? 's' : ''}
+            Showing {startIndex + 1}-{Math.min(endIndex, filteredWorkouts.length)} of {filteredWorkouts.length} workout{filteredWorkouts.length !== 1 ? 's' : ''}
           </p>
         </motion.div>
 
         {/* Workout Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredWorkouts.map((workout, index) => (
+          {currentWorkouts.map((workout, index) => (
             <motion.div
               key={workout.id}
               initial={{ opacity: 0, y: 20 }}
@@ -751,7 +764,7 @@ const WorkoutsPage: React.FC = () => {
               className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300"
             >
               {/* Video Thumbnail */}
-              <div className="relative aspect-video bg-gray-100">
+              <div className="relative aspect-video bg-gray-100 overflow-hidden">
                 <iframe
                   src={workout.videoUrl}
                   title={workout.title}
@@ -759,6 +772,7 @@ const WorkoutsPage: React.FC = () => {
                   frameBorder="0"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
+                  loading="lazy"
                 />
                 <div className={`absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r ${getCategoryColor(workout.category)} text-white`}>
                   {getCategoryDisplayName(workout.category)}
@@ -790,6 +804,61 @@ const WorkoutsPage: React.FC = () => {
             </motion.div>
           ))}
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="flex justify-center items-center space-x-2 mt-12"
+          >
+            <button
+              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+              disabled={currentPage === 1}
+              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Previous
+            </button>
+            
+            <div className="flex space-x-1">
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let pageNum;
+                if (totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1;
+                } else if (currentPage >= totalPages - 2) {
+                  pageNum = totalPages - 4 + i;
+                } else {
+                  pageNum = currentPage - 2 + i;
+                }
+                
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => setCurrentPage(pageNum)}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      currentPage === pageNum
+                        ? 'bg-gradient-to-r from-blue-600 to-emerald-600 text-white'
+                        : 'text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+            </div>
+            
+            <button
+              onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+              disabled={currentPage === totalPages}
+              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Next
+            </button>
+          </motion.div>
+        )}
 
         {/* No Results */}
         {filteredWorkouts.length === 0 && (
