@@ -378,7 +378,7 @@ const WorkoutsPage: React.FC = () => {
       videoUrl: 'https://www.youtube.com/embed/WmSIMpIDa_A',
       duration: '40 min',
       difficulty: 'beginner'
-    }
+    },
     {
       id: '42',
       title: 'Hatha Yoga Exercise | Yoga For Beginners | Yoga At Home',
