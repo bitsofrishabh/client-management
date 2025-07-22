@@ -379,6 +379,204 @@ const WorkoutsPage: React.FC = () => {
       duration: '40 min',
       difficulty: 'beginner'
     }
+    {
+      id: '42',
+      title: 'Hatha Yoga Exercise | Yoga For Beginners | Yoga At Home',
+      description: 'Traditional Hatha yoga practice designed for beginners to build strength and flexibility at home.',
+      category: 'yoga',
+      videoUrl: 'https://www.youtube.com/embed/h9-pIazVD8w',
+      duration: '30 min',
+      difficulty: 'beginner'
+    },
+    {
+      id: '43',
+      title: 'Hatha Yoga Exercise | Yoga For Beginners | Yoga At Home (Session 2)',
+      description: 'Second session of Hatha yoga exercises for beginners focusing on basic poses and breathing.',
+      category: 'yoga',
+      videoUrl: 'https://www.youtube.com/embed/80UUstepYB8',
+      duration: '30 min',
+      difficulty: 'beginner'
+    },
+    {
+      id: '44',
+      title: 'Hatha Yoga For Flexibility In Hindi - Day 7 | Surya Namaskar For Flexibility',
+      description: 'Day 7 of Hatha yoga series focusing on flexibility through Surya Namaskar practice in Hindi.',
+      category: 'yoga',
+      videoUrl: 'https://www.youtube.com/embed/GAgQQvswvbs',
+      duration: '35 min',
+      difficulty: 'intermediate'
+    },
+    {
+      id: '45',
+      title: 'Strength Building Hatha Yoga in Hindi - Day 6 | Surya Namaskar For Strength',
+      description: 'Day 6 of Hatha yoga series focusing on building strength through Surya Namaskar in Hindi.',
+      category: 'yoga',
+      videoUrl: 'https://www.youtube.com/embed/unmh2KWlspM',
+      duration: '35 min',
+      difficulty: 'intermediate'
+    },
+    {
+      id: '46',
+      title: 'Hatha Yoga In Hindi - Day 5 | Surya Namaskar For Flexibility',
+      description: 'Day 5 of Hatha yoga series with Surya Namaskar practice for improved flexibility in Hindi.',
+      category: 'yoga',
+      videoUrl: 'https://www.youtube.com/embed/j-_xKs6QEos',
+      duration: '30 min',
+      difficulty: 'intermediate'
+    },
+    {
+      id: '47',
+      title: 'Hatha Yoga In Hindi - Day 4 | Surya Namaskar For Strength And Flexibility',
+      description: 'Day 4 of Hatha yoga combining strength and flexibility through Surya Namaskar in Hindi.',
+      category: 'yoga',
+      videoUrl: 'https://www.youtube.com/embed/5iKB4Axb1W0',
+      duration: '30 min',
+      difficulty: 'intermediate'
+    },
+    {
+      id: '48',
+      title: 'Hatha Yoga For Strength In Hindi - Day 3 | Yoga At Home',
+      description: 'Day 3 of Hatha yoga series focusing on building strength at home in Hindi.',
+      category: 'yoga',
+      videoUrl: 'https://www.youtube.com/embed/Zh-ViLXsWbo',
+      duration: '30 min',
+      difficulty: 'beginner'
+    },
+    {
+      id: '49',
+      title: 'Hatha Yoga In Hindi - Day 2 | Surya Namaskar | Yoga At Home',
+      description: 'Day 2 of Hatha yoga series with Surya Namaskar practice for beginners in Hindi.',
+      category: 'yoga',
+      videoUrl: 'https://www.youtube.com/embed/3gKfU2gf0v0',
+      duration: '25 min',
+      difficulty: 'beginner'
+    },
+    {
+      id: '50',
+      title: 'Hatha Yoga | Yoga at Home for Flexibility & Strength | Hindi Yoga Class',
+      description: 'Complete Hatha yoga session for flexibility and strength practice at home in Hindi.',
+      category: 'yoga',
+      videoUrl: 'https://www.youtube.com/embed/eKagi0hX9bY',
+      duration: '40 min',
+      difficulty: 'beginner'
+    },
+    {
+      id: '51',
+      title: 'Power Yoga for Beginners | Yoga For Beginners | Yoga At Home',
+      description: 'Dynamic Power yoga session designed for beginners to build strength and endurance.',
+      category: 'yoga',
+      videoUrl: 'https://www.youtube.com/embed/eJ_dgBQ_cxo',
+      duration: '45 min',
+      difficulty: 'intermediate'
+    },
+    {
+      id: '52',
+      title: 'Beginner Power Yoga Routine | Yoga at Home for Strength & Flexibility',
+      description: 'Power yoga routine for beginners focusing on building strength and flexibility at home.',
+      category: 'yoga',
+      videoUrl: 'https://www.youtube.com/embed/z_Ot848Lew4',
+      duration: '40 min',
+      difficulty: 'intermediate'
+    },
+    {
+      id: '53',
+      title: 'Power Yoga for Beginners | Yoga For Beginners | Yoga At Home (Advanced)',
+      description: 'Advanced Power yoga session for beginners ready to challenge themselves with dynamic poses.',
+      category: 'yoga',
+      videoUrl: 'https://www.youtube.com/embed/GtUWr1nbf_8',
+      duration: '45 min',
+      difficulty: 'intermediate'
+    },
+    {
+      id: '54',
+      title: 'Morning Power Yoga for Beginners | Yoga For Beginners | Yoga At Home',
+      description: 'Energizing morning Power yoga routine perfect for starting your day with strength and focus.',
+      category: 'yoga',
+      videoUrl: 'https://www.youtube.com/embed/8C_YyW9-QvA',
+      duration: '35 min',
+      difficulty: 'beginner'
+    },
+    {
+      id: '55',
+      title: 'Bollywood Zumba Workout Video | Dance Video | Zumba Video',
+      description: 'High-energy Bollywood Zumba workout combining dance moves with fitness for a fun workout experience.',
+      category: 'zumba',
+      videoUrl: 'https://www.youtube.com/embed/34nhJPcMRVI',
+      duration: '35 min',
+      difficulty: 'intermediate'
+    },
+    {
+      id: '56',
+      title: 'Mat Workout Video For Belly Fat And Full Body Workout Video',
+      description: 'Mat-based Zumba workout targeting belly fat with full body movements for comprehensive fitness.',
+      category: 'zumba',
+      videoUrl: 'https://www.youtube.com/embed/JDsScafAOSM',
+      duration: '30 min',
+      difficulty: 'intermediate'
+    },
+    {
+      id: '57',
+      title: '30 minutes Nonstop Workout Video | Full Body Workout Video',
+      description: 'Non-stop 30-minute Zumba workout for full body conditioning and cardiovascular fitness.',
+      category: 'zumba',
+      videoUrl: 'https://www.youtube.com/embed/5A16XH5tVFc',
+      duration: '30 min',
+      difficulty: 'intermediate'
+    },
+    {
+      id: '58',
+      title: 'Workout For Lower And Upper Belly Fat Video',
+      description: 'Targeted Zumba workout focusing on lower and upper belly fat reduction through dance movements.',
+      category: 'zumba',
+      videoUrl: 'https://www.youtube.com/embed/FwTXhMkTeYU',
+      duration: '25 min',
+      difficulty: 'intermediate'
+    },
+    {
+      id: '59',
+      title: '5 Kg Weight Loss Video | Nonstop 40 Minutes Hard Exercise Video',
+      description: 'Intense 40-minute non-stop Zumba workout designed for significant weight loss and fat burning.',
+      category: 'zumba',
+      videoUrl: 'https://www.youtube.com/embed/5cPVjzPOJgg',
+      duration: '40 min',
+      difficulty: 'advanced'
+    },
+    {
+      id: '60',
+      title: '1 Hour Best Exercise For Everyone | Full Body Workout Video',
+      description: 'Comprehensive 1-hour Zumba workout suitable for all fitness levels with full body conditioning.',
+      category: 'zumba',
+      videoUrl: 'https://www.youtube.com/embed/-F0dBjgcfgc',
+      duration: '60 min',
+      difficulty: 'intermediate'
+    },
+    {
+      id: '61',
+      title: 'Belly Fat And Full Body Workout Video | Zumba Fitness',
+      description: 'Zumba fitness routine targeting belly fat while providing full body workout for overall fitness.',
+      category: 'zumba',
+      videoUrl: 'https://www.youtube.com/embed/KcsQtCdWJNQ',
+      duration: '35 min',
+      difficulty: 'intermediate'
+    },
+    {
+      id: '62',
+      title: 'Beginners के लिए Easy Exercise Video | Zumba Fitness',
+      description: 'Easy Zumba exercise video designed specifically for beginners in Hindi with simple movements.',
+      category: 'zumba',
+      videoUrl: 'https://www.youtube.com/embed/eGLbvwSxPmY',
+      duration: '25 min',
+      difficulty: 'beginner'
+    },
+    {
+      id: '63',
+      title: 'वजन कम करने के लिए यह आसान एक्सरसाइज | Easy Exercise for Weight Loss',
+      description: 'Easy Zumba exercises for weight loss in Hindi, perfect for those starting their fitness journey.',
+      category: 'zumba',
+      videoUrl: 'https://www.youtube.com/embed/XdNLRK7vyMU',
+      duration: '30 min',
+      difficulty: 'beginner'
+    }
   ];
 
   const categories = [
